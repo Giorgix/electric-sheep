@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "description": "Evidence-driven evolution stress tests for coding agents",
   "type": "module",
+  "bin": {"electronic-sheeps": "bin/electronic-sheeps.mjs"},
+  "files": ["bin/", "src/", "skills/", ".claude-plugin/", ".codex-plugin/", "scripts/package-local.mjs", "README.md", "docs/usage.md"],
   "engines": {"node": ">=22"},
   "scripts": {
     "test": "node --test tests/*.test.mjs",
