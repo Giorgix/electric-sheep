@@ -43,6 +43,7 @@ export async function executeApproved(run, commandId, stage) {
     durationMs: null,
     stdoutPath: `evidence/${id}.stdout`,
     stderrPath: `evidence/${id}.stderr`,
+    command: structuredClone(spec),
   };
   run.commandResults.push(result);
   await saveRun(run);
@@ -73,10 +74,27 @@ export async function executeApproved(run, commandId, stage) {
     interrupted = false,
     spawnError,
     logError,
-    escalation;
+    escalation,
+    releasePipes;
+  let releaseWait;
+  const waitLimit = new Promise((resolveWait) => {
+    releaseWait = resolveWait;
+  });
   const stop = () => {
     terminateTree(child);
     escalation ??= setTimeout(() => terminateTree(child, true), 1000);
+    // A parent may exit while an escaped descendant retains the pipe handles.
+    // Bound our waiting, not our claims about descendant confinement.
+    releasePipes ??= setTimeout(() => {
+      child.stdout.unpipe(stdout);
+      child.stderr.unpipe(stderr);
+      child.stdout.destroy();
+      child.stderr.destroy();
+      stdout.end();
+      stderr.end();
+      child.unref();
+      releaseWait({ code: child.exitCode, signal: child.signalCode, abandoned: true });
+    }, 2000);
   };
   const onSignal = () => {
     interrupted = true;
@@ -98,10 +116,18 @@ export async function executeApproved(run, commandId, stage) {
     spawnError = error;
   });
   try {
-    const { code, signal } = await new Promise((resolveClose) =>
-      child.once('close', (code, signal) => resolveClose({ code, signal })),
-    );
+    const { code, signal, abandoned } = await Promise.race([
+      new Promise((resolveClose) =>
+        child.once('close', (code, signal) => resolveClose({ code, signal })),
+      ),
+      waitLimit,
+    ]);
     await outputDone;
+    if (abandoned) {
+      result.outputTruncated = true;
+      result.terminationNote =
+        'Stopped waiting for inherited pipes after best-effort termination; escaped descendants may still be running.';
+    }
     result.exitCode = code;
     result.signal = signal;
     result.status = interrupted
@@ -121,6 +147,7 @@ export async function executeApproved(run, commandId, stage) {
   } finally {
     clearTimeout(timer);
     clearTimeout(escalation);
+    clearTimeout(releasePipes);
     process.off('SIGINT', onSignal);
     process.off('SIGTERM', onSignal);
   }

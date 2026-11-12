@@ -53,7 +53,7 @@ After a crash, inspect `status`, confirm old processes have stopped, explicitly 
 
 A finding JSON object has `id`, `category`, `origin`, `impact`, `summary`, `evidenceRefs`, and `recommendation`. Categories: `defect`, `evolution-friction`, `maintainability-concern`, `hypothesis`. Origins: `baseline`, `experimental`, `uncertain`. References must be existing run-relative `evidence/` files, obtained from command records or diff/artifact events. Defects need failed-check evidence; structural concerns need code/diff evidence. Hypotheses may have no executed evidence but stay explicitly unproven.
 
-Reports contain scope/baseline/environment limits; per-challenge requirements and evidence; regressions and structural deltas; attributed findings; next actions; resume/cleanup. Structural measurements are text-file Git deltas, not semantic complexity scores. Generated/binary files are excluded. Interpretation remains the agent's judgment, not a runner-certified quality verdict.
+Reports contain scope/baseline/environment limits; the approved plan and executable/argv/cwd/timeout inventory; per-challenge requirements and evidence; regressions and structural deltas; attributed findings; next actions; resume/cleanup. Each executed command also records its exact specification so later approved command amendments do not obscure historical execution. Structural measurements are text-file Git deltas, not semantic complexity scores. Generated/binary files are excluded. Interpretation remains the agent's judgment, not a runner-certified quality verdict.
 
 ## Safety, privacy, and supported inputs
 
@@ -61,7 +61,7 @@ Target inputs require an initial Git commit and a clean index/worktree including
 
 **A worktree isolates source changes, not the host machine.** Git metadata/objects are shared; runner-owned commits are detached, use a local experiment identity, and never push. Runner Git mechanics disable hooks/signing/fsmonitor; approved project scripts can still execute arbitrary code. Host tools are not confined by the runner. Source instructions, host permissions, external services, inherited environment credentials, network use, and safe dependency setup need review. No credentials are copied deliberately and no production services are used by default, but there is no comprehensive environment scrubbing or network blockade. Use a sandbox for untrusted code.
 
-Logs/evidence are local and can contain secrets. Do not publish automatically. The host model continues using its own provider/privacy policy. Timeouts apply to runner commands, not model token spend or every host tool. Windows termination uses a PID-specific process-tree request; POSIX uses a process group and escalation. Neither confines arbitrary descendants that detach or escape.
+Logs/evidence are local and can contain secrets. Do not publish automatically. The host model continues using its own provider/privacy policy. Timeouts apply to runner commands, not model token spend or every host tool. Windows termination uses a PID-specific process-tree request; POSIX uses a process group and escalation. Neither confines arbitrary descendants that detach or escape. After a timeout/signal the runner allows a two-second termination grace, then releases inherited pipes if necessary and marks output incomplete instead of waiting indefinitely. Escaped descendants may still need manual cleanup.
 
 ## Local packaging
 

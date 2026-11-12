@@ -6,6 +6,23 @@ export function contained(parent, child) {
   const rel = relative(parent, child);
   return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
 }
+export async function assertNoFilters(root) {
+  const files = await runGit(root, [
+    'ls-files',
+    '--cached',
+    '--others',
+    '--exclude-standard',
+    '-z',
+  ]);
+  if (!files) return;
+  const attrs = (
+    await runGit(root, ['check-attr', '-z', '--stdin', 'filter'], { input: files })
+  ).split('\0');
+  for (let i = 2; i < attrs.length; i += 3) {
+    if (!['unspecified', 'unset'].includes(attrs[i]))
+      throw new Error('Unsupported Git filters (including LFS) in v1');
+  }
+}
 export async function inspectRepository({ repo, scope }) {
   let root, commit;
   try {
@@ -21,17 +38,12 @@ export async function inspectRepository({ repo, scope }) {
   const entries = (await runGit(root, ['ls-files', '--stage', '-z'])).split('\0');
   if (entries.some((e) => e.startsWith('160000 ')))
     throw new Error('Submodules are unsupported in v1');
+  // Even `git status` can run clean filters; inspect attributes first.
+  await assertNoFilters(root);
   if (await runGit(root, ['status', '--porcelain=v1', '-z', '--untracked-files=all']))
     throw new Error(
       'Dirty checkout: commit or exclude changes yourself; no stash or reset performed',
     );
-  const files = (await runGit(root, ['ls-files', '-z'])).split('\0').filter(Boolean);
-  if (files.length) {
-    const attrs = (await runGit(root, ['check-attr', '-z', 'filter', '--', ...files])).split('\0');
-    for (let i = 2; i < attrs.length; i += 3)
-      if (!['unspecified', 'unset'].includes(attrs[i]))
-        throw new Error('Git filters (including LFS) are unsupported in v1');
-  }
   if (!Array.isArray(scope) || !scope.length) throw new Error('Missing scope');
   for (const path of scope) {
     relativePath(path, 'scope');

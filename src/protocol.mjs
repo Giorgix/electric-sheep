@@ -52,6 +52,7 @@ async function snapshotAllApplicable(run) {
 }
 export async function runBaseline(run) {
   requirePhase(run, 'prepared', 'baseline');
+  if (!(await checkIntegrity(run))) return run;
   run.phase = 'baseline';
   await saveRun(run);
   for (const id of run.plan.setupCommandIds) {
@@ -74,7 +75,8 @@ export async function runBaseline(run) {
       );
   }
   try {
-    run.protectedArtifacts = await snapshotArtifacts(run, run.plan.baselineProtectedPaths);
+    if (!run.protectedArtifacts.length)
+      run.protectedArtifacts = await snapshotArtifacts(run, run.plan.baselineProtectedPaths);
   } catch (error) {
     return stop(run, 'blocked', error.message);
   }
@@ -119,6 +121,12 @@ export async function freezeChallenge(run) {
   if (!(await checkIntegrity(run))) return run;
   if (results.some((r) => r.status === 'interrupted'))
     return stop(run, 'cancelled', 'Pre-implementation checks interrupted');
+  if (results.some((r) => ['spawn-error', 'timed-out'].includes(r.status)))
+    return stop(
+      run,
+      'blocked',
+      'Pre-implementation infrastructure did not complete; not an expected red check',
+    );
   run.events.push({
     type: 'acceptance-frozen',
     challengeId: challenge.id,

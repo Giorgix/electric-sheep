@@ -36,9 +36,13 @@
 
 ---
 
+## Execution status
+
+The user approved native execution and required feature branches/PRs against `main`. All ten tasks have been implemented on `feat/evolution-stress-test`, followed by a self-review fix pass; see `docs/verification.md` for executed checks and outstanding live-host validation. The step checkboxes below preserve the original plan; execution was tracked in the plan-scoped ledger.
+
 ## Execution prelude
 
-The workspace currently contains only design documentation and is not a Git repository. Do not run these actions until execution is approved.
+At planning time the workspace contained only design documentation and was not a Git repository. The user subsequently initialized and pushed an empty `main` commit; implementation did not commit or push to `main`.
 
 - [ ] Confirm the approved spec and this plan are the only existing project files; preserve any new user files.
 - [ ] Initialize Git only if still absent, then commit the approved design and plan. Use existing Git identity; if none is configured, ask for a repository-local identity instead of inventing one or changing global settings.
@@ -327,6 +331,6 @@ CLI verbs (all support `--runs-root`):
 - [x] Type consistency: clarified persistent round outcomes, report status after cleanup, acceptance prechecks, and amendment attempt accounting.
 - [x] Review focus: all five listed conditions have tests in their owning tasks.
 - [x] Proportion: a small CLI and one canonical skill; no unrelated subsystem or provider service.
-- [ ] Human review of this plan and selection of an available execution method.
+- [x] Human review of this plan and selection of native execution; user additionally requires feature branches and PRs against `main`.
 
-No implementation has been started. In this session there is no subagent tool, so native execution through `executing-plans` is the available method. A fresh independent whole-branch review requires an additional reviewer/tool; if unavailable, disclose that limit and perform self-review rather than claiming independent review.
+Implementation was subsequently delivered through native execution using `executing-plans`. In this session there is no subagent tool. A fresh independent whole-branch review requires an additional reviewer/tool; if unavailable, disclose that limit and perform self-review rather than claiming independent review.

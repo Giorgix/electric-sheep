@@ -250,4 +250,4 @@ Dirty-worktree snapshots, container execution, provider/session orchestration, s
 - [x] Obtain user approval of this document.
 - [x] Invoke writing-plans and produce an implementation plan: `docs/superpowers/plans/2026-11-12-evolution-stress-test.md` (awaiting user review and execution selection).
 
-This project directory was initially empty and is not yet a Git repository. The design is saved here without initializing a product scaffold or creating a commit. Repository initialization and committing the approved design can be included in the implementation plan.
+At design time this project directory was empty and not yet a Git repository. The user subsequently initialized Git and pushed the initial `main` commit. The approved design and implementation were committed only on `feat/evolution-stress-test`, with PRs targeting `main` and no direct pushes to `main`.

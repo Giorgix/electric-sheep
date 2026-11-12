@@ -130,6 +130,7 @@ export async function buildReport(run) {
     host: run.plan.host,
     roleSeparation: run.plan.roleSeparation,
     approvals: run.approvals,
+    approvedPlan: structuredClone(run.plan),
     baseline: {
       coverage: run.plan.coverage,
       coverageNote: run.plan.coverageNote,
@@ -191,10 +192,18 @@ function markdown(report) {
       escape(c.requirement),
       ...c.evidenceRefs.map((ref) => `- [${escape(ref)}](${ref})`),
     );
-  lines.push('', '## 3. Regression outcomes and structural deltas');
+  lines.push(
+    '',
+    '## 3. Regression outcomes and structural deltas',
+    '### Approved command inventory',
+  );
+  for (const c of report.approvedPlan.commands)
+    lines.push(
+      `- ${escape(c.id)}: ${escape(JSON.stringify([c.executable, ...c.args]))}; cwd ${escape(c.cwd)}; timeout ${c.timeoutMs}ms`,
+    );
   for (const r of report.commandResults)
     lines.push(
-      `- ${escape(r.stage)} / ${escape(r.commandId)}: ${r.status} (exit ${r.exitCode ?? 'unknown'})`,
+      `- ${escape(r.stage)} / ${escape(r.commandId)}: ${r.status} (exit ${r.exitCode ?? 'unknown'})${r.outputTruncated ? '; output incomplete after termination deadline' : ''}`,
     );
   for (const d of report.deltas)
     lines.push(

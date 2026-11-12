@@ -3,6 +3,7 @@ import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { runGit } from './git.mjs';
 import { ownedDirectory, saveRun } from './store.mjs';
+import { assertNoFilters } from './repository.mjs';
 
 async function checkOwnership(run) {
   const owner = await ownedDirectory(run.directory, run.id);
@@ -74,16 +75,13 @@ export async function captureDiff(run, label) {
   await validateWorkspace(run);
   if ((await runGit(run.workspace, ['rev-parse', 'HEAD'])) !== run.checkpoint)
     throw new Error('Workspace checkpoint drift');
+  await assertNoFilters(run.workspace);
   await runGit(run.workspace, ['add', '-A', '--', '.']);
-  const diff = await runGit(run.workspace, [
-    'diff',
-    '--cached',
-    '--binary',
-    '--no-ext-diff',
-    '--no-textconv',
-    run.checkpoint,
-    '--',
-  ]);
+  const diff = await runGit(
+    run.workspace,
+    ['diff', '--cached', '--binary', '--no-ext-diff', '--no-textconv', run.checkpoint, '--'],
+    { raw: true },
+  );
   const diffPath = `evidence/${randomUUID()}.diff`;
   await writeFile(join(run.directory, diffPath), diff, { flag: 'wx', mode: 0o600 });
   run.events.push({ type: 'diff', label, before: run.checkpoint, diffPath });
