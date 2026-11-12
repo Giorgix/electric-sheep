@@ -1,0 +1,3 @@
+export function plan() {
+  return {schemaVersion: 1, scope: ['.'], commands: [{id: 'test', executable: process.execPath, args: ['--test', 'base.test.mjs'], purpose: 'check'}], setupCommandIds: [], baselineCommandIds: ['test'], baselineProtectedPaths: ['base.test.mjs'], coverage: 'existing', coverageNote: '', challenges: [1,2,3].map(n => ({id: `round${n}`, requirement: `Requirement ${n}`, rationale: 'A realistic extension', constraints: ['Preserve existing behavior'], protectedPaths: [`round${n}.test.mjs`], commandIds: ['test'], stopCondition: 'Stop on failed regression'})), exclusions: [], host: 'test', roleSeparation: 'single-agent'};
+}
