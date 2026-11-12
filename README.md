@@ -68,6 +68,6 @@ The runner has automated local tests. **Real model-driven behavior is not yet va
 
 - [CLI usage and plan schema](docs/usage.md)
 - [Sample checkout exercise](examples/checkout/README.md)
-- [Approved design](docs/superpowers/specs/2026-11-12-evolution-stress-test-design.md)
+- [Approved design (source repository)](https://github.com/Giorgix/electric-sheep/blob/main/docs/superpowers/specs/2026-11-12-evolution-stress-test-design.md)
 
-For development: `npm test` and `npm run check`. Development uses feature branches and PRs against `main`; never push directly to `main`.
+For development: `npm test` and `npm run check`. Optional formatting uses the pinned development-only Prettier dependency: `npm ci --ignore-scripts`, then `npm run format` or `npm run format:check`. The runner itself still needs no install. Development uses feature branches and PRs against `main`; never push directly to `main`.

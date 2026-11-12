@@ -3,11 +3,31 @@
   "version": "0.1.0",
   "description": "Evidence-driven evolution stress tests for coding agents",
   "type": "module",
-  "bin": {"electronic-sheeps": "bin/electronic-sheeps.mjs"},
-  "files": ["bin/", "src/", "skills/", ".claude-plugin/", ".codex-plugin/", "scripts/package-local.mjs", "README.md", "docs/usage.md"],
-  "engines": {"node": ">=22"},
+  "bin": {
+    "electronic-sheeps": "bin/electronic-sheeps.mjs"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "skills/",
+    ".claude-plugin/",
+    ".codex-plugin/",
+    "scripts/package-local.mjs",
+    "README.md",
+    "docs/usage.md",
+    "docs/verification.md",
+    "examples/"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "check": "node --input-type=module -e \"import {readdirSync} from 'node:fs'; import {execFileSync} from 'node:child_process'; for (const dir of ['src','bin','scripts']) { let files; try {files=readdirSync(dir)} catch {continue} for (const file of files) if(file.endsWith('.mjs')) execFileSync(process.execPath,['--check',dir+'/'+file],{stdio:'inherit'}); }\""
+    "check": "node scripts/check.mjs",
+    "format": "prettier --write \"{src,bin,scripts,tests}/**/*.mjs\" \"skills/**/*.mjs\" package.json .prettierrc.json",
+    "format:check": "prettier --check \"{src,bin,scripts,tests}/**/*.mjs\" \"skills/**/*.mjs\" package.json .prettierrc.json"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
   }
 }

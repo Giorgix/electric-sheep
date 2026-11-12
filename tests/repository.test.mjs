@@ -1,13 +1,64 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {access} from 'node:fs/promises';
-import {join} from 'node:path';
-import {inspectRepository} from '../src/repository.mjs';
-import {createRepo} from './helpers/repos.mjs';
-test('clean committed source is inspected without mutation', async t => { const r = await createRepo(); t.after(r.dispose); const before = await r.snapshot(); const info = await inspectRepository({repo: r.root, scope: ['source.txt']}); assert.equal(info.commit, before.head); assert.equal(info.branch, 'main'); assert.deepEqual(await r.snapshot(), before); });
-for (const kind of ['unstaged', 'staged', 'untracked']) test(`blocks ${kind} checkout`, async t => { const r = await createRepo(); t.after(r.dispose); await r.write(kind === 'untracked' ? 'new.txt' : 'source.txt', 'changed'); if (kind === 'staged') await r.git('add', '.'); await assert.rejects(inspectRepository({repo: r.root, scope: ['.']}), /dirty/i); });
-test('blocks unborn and non-Git roots', async t => { const r = await createRepo({commit: false}); t.after(r.dispose); await assert.rejects(inspectRepository({repo: r.root, scope: ['.']}), /commit/i); await assert.rejects(inspectRepository({repo: join(r.root, 'missing'), scope: ['.']})); });
-for (const scope of ['../other', 'missing']) test(`blocks invalid scope ${scope}`, async t => { const r = await createRepo(); t.after(r.dispose); await assert.rejects(inspectRepository({repo: r.root, scope: [scope]}), /scope/i); });
-test('rejects Git filters before materialization', async t => { const r = await createRepo({files: {'.gitattributes': '*.txt filter=sentinel\n', 'source.txt': 'hello'}}); t.after(r.dispose); await r.git('config', 'filter.sentinel.smudge', 'touch FILTER_RAN'); await assert.rejects(inspectRepository({repo: r.root, scope: ['.']}), /filter/i); await assert.rejects(access(join(r.root, 'FILTER_RAN'))); });
-test('rejects submodule entries', async t => { const r = await createRepo(); t.after(r.dispose); await r.git('update-index', '--add', '--cacheinfo', `160000,${await r.git('rev-parse', 'HEAD')},vendor`); await r.git('commit', '-m', 'gitlink'); await assert.rejects(inspectRepository({repo: r.root, scope: ['.']}), /submodule/i); });
-test('does not invoke configured fsmonitor', async t => { const r = await createRepo(); t.after(r.dispose); await r.write('.git/monitor.sh', '#!/bin/sh\ntouch MONITOR_RAN\n'); await r.git('config', 'core.fsmonitor', './.git/monitor.sh'); await inspectRepository({repo: r.root, scope: ['.']}); await assert.rejects(access(join(r.root, 'MONITOR_RAN'))); });
+import { access } from 'node:fs/promises';
+import { join } from 'node:path';
+import { inspectRepository } from '../src/repository.mjs';
+import { createRepo } from './helpers/repos.mjs';
+test('clean committed source is inspected without mutation', async (t) => {
+  const r = await createRepo();
+  t.after(r.dispose);
+  const before = await r.snapshot();
+  const info = await inspectRepository({ repo: r.root, scope: ['source.txt'] });
+  assert.equal(info.commit, before.head);
+  assert.equal(info.branch, 'main');
+  assert.deepEqual(await r.snapshot(), before);
+});
+for (const kind of ['unstaged', 'staged', 'untracked'])
+  test(`blocks ${kind} checkout`, async (t) => {
+    const r = await createRepo();
+    t.after(r.dispose);
+    await r.write(kind === 'untracked' ? 'new.txt' : 'source.txt', 'changed');
+    if (kind === 'staged') await r.git('add', '.');
+    await assert.rejects(inspectRepository({ repo: r.root, scope: ['.'] }), /dirty/i);
+  });
+test('blocks unborn and non-Git roots', async (t) => {
+  const r = await createRepo({ commit: false });
+  t.after(r.dispose);
+  await assert.rejects(inspectRepository({ repo: r.root, scope: ['.'] }), /commit/i);
+  await assert.rejects(inspectRepository({ repo: join(r.root, 'missing'), scope: ['.'] }));
+});
+for (const scope of ['../other', 'missing'])
+  test(`blocks invalid scope ${scope}`, async (t) => {
+    const r = await createRepo();
+    t.after(r.dispose);
+    await assert.rejects(inspectRepository({ repo: r.root, scope: [scope] }), /scope/i);
+  });
+test('rejects Git filters before materialization', async (t) => {
+  const r = await createRepo({
+    files: { '.gitattributes': '*.txt filter=sentinel\n', 'source.txt': 'hello' },
+  });
+  t.after(r.dispose);
+  await r.git('config', 'filter.sentinel.smudge', 'touch FILTER_RAN');
+  await assert.rejects(inspectRepository({ repo: r.root, scope: ['.'] }), /filter/i);
+  await assert.rejects(access(join(r.root, 'FILTER_RAN')));
+});
+test('rejects submodule entries', async (t) => {
+  const r = await createRepo();
+  t.after(r.dispose);
+  await r.git(
+    'update-index',
+    '--add',
+    '--cacheinfo',
+    `160000,${await r.git('rev-parse', 'HEAD')},vendor`,
+  );
+  await r.git('commit', '-m', 'gitlink');
+  await assert.rejects(inspectRepository({ repo: r.root, scope: ['.'] }), /submodule/i);
+});
+test('does not invoke configured fsmonitor', async (t) => {
+  const r = await createRepo();
+  t.after(r.dispose);
+  await r.write('.git/monitor.sh', '#!/bin/sh\ntouch MONITOR_RAN\n');
+  await r.git('config', 'core.fsmonitor', './.git/monitor.sh');
+  await inspectRepository({ repo: r.root, scope: ['.'] });
+  await assert.rejects(access(join(r.root, 'MONITOR_RAN')));
+});
