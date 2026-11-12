@@ -45,14 +45,20 @@ export async function createWorkspace(run) {
     throw error;
   }
 }
-export async function checkpoint(run, label) {
+export async function captureDiff(run, label) {
   await validateWorkspace(run);
-  const before = run.checkpoint;
-  if (await runGit(run.workspace, ['rev-parse', 'HEAD']) !== before) throw new Error('Workspace checkpoint drift');
+  if (await runGit(run.workspace, ['rev-parse', 'HEAD']) !== run.checkpoint) throw new Error('Workspace checkpoint drift');
   await runGit(run.workspace, ['add', '-A', '--', '.']);
-  const diff = await runGit(run.workspace, ['diff', '--cached', '--binary', '--no-ext-diff', '--no-textconv', before, '--']);
+  const diff = await runGit(run.workspace, ['diff', '--cached', '--binary', '--no-ext-diff', '--no-textconv', run.checkpoint, '--']);
   const diffPath = `evidence/${randomUUID()}.diff`;
   await writeFile(join(run.directory, diffPath), diff, {flag: 'wx', mode: 0o600});
+  run.events.push({type: 'diff', label, before: run.checkpoint, diffPath});
+  await saveRun(run);
+  return diffPath;
+}
+export async function checkpoint(run, label) {
+  const before = run.checkpoint;
+  const diffPath = await captureDiff(run, label);
   await runGit(run.workspace, ['-c', 'user.name=Electronic Sheeps', '-c', 'user.email=local@electronic-sheeps.invalid', 'commit', '--allow-empty', '-m', label]);
   const commit = await runGit(run.workspace, ['rev-parse', 'HEAD']);
   run.checkpoint = commit;

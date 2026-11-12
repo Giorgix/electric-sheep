@@ -33,7 +33,11 @@ export async function executeApproved(run, commandId, stage) {
   const stdout = outHandle.createWriteStream();
   const stderr = errHandle.createWriteStream();
   const start = performance.now();
-  const child = spawn(spec.executable, spec.args, {cwd, shell: false, windowsHide: true, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe']});
+  const env = {...process.env};
+  // Node's internal test-worker flag makes nested `node --test` skip all files.
+  // It is runner infrastructure, not a project environment setting.
+  delete env.NODE_TEST_CONTEXT;
+  const child = spawn(spec.executable, spec.args, {cwd, env, shell: false, windowsHide: true, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe']});
   let timedOut = false, interrupted = false, spawnError, logError, escalation;
   const stop = () => {
     terminateTree(child);
