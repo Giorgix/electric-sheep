@@ -17,7 +17,7 @@ This is a local preview, not a claim of universal reliability or production read
 - Claude model-driven discovery and full exercise: **unverified**, no paid/inference call performed.
 - Codex local skill and plugin live behavior: **unverified**. Generated standalone skill runner is tested independently of its original installation directory.
 - Skill pressure scenarios/control comparisons: **unverified**; no independent agent tool available. Source tests cannot prove instruction following.
-- Linux/macOS and Node 24: **unverified locally**. CI matrix is authored for Node 22/24 on Ubuntu, Windows, and macOS; an authored workflow is not an executed pass.
+- Cross-platform CI **executed and passed** on code commit `1e13e9c`: Node 22 and 24 on `ubuntu-latest`, `windows-latest`, and `macos-latest` (all six matrix combinations). Each job ran dependency installation with scripts disabled, formatting/syntax checks, the 89-test suite including packaging/e2e regressions, and npm dry-run packaging. Evidence: [PR workflow run](https://github.com/Giorgix/electric-sheep/actions/runs/43279737926) and [push workflow run](https://github.com/Giorgix/electric-sheep/actions/runs/43279737506). Linux/macOS and Node 24 remain CI verification, not local-machine or live-model verification.
 - Windows command tree timeout: exercised with a Node child spawning another Node process, PID-specific `taskkill /T /F`; graceful SIGINT handler exercised through the actual CLI. An orphan retaining inherited pipes also reproduces the wait-limit behavior: after best-effort termination, the runner stops waiting after a two-second grace and labels output incomplete. Escaped descendants may remain; no general confinement guarantee.
 
 ## Whole-branch review
