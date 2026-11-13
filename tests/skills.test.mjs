@@ -32,5 +32,5 @@ test('skill runner entry works outside project cwd', async () => {
     [join(skill, 'scripts/run.mjs'), '--help'],
     { cwd: process.env.TEMP ?? process.env.TMPDIR ?? '/tmp' },
   );
-  assert.match(result.stdout, /Electronic Sheeps/);
+  assert.match(result.stdout, /Electric Sheep/);
 });

@@ -39,7 +39,7 @@ test('nonzero exit remains failure with separate stdout and stderr', async (t) =
   assert.match(await readFile(join(run.directory, result.stderrPath), 'utf8'), /error/);
 });
 test('missing executable is recorded rather than passed', async (t) => {
-  const { run } = await commandFixture(t, { executable: 'sheeps-missing-executable-0192' });
+  const { run } = await commandFixture(t, { executable: 'electric-sheep-missing-executable-0192' });
   assert.equal((await executeApproved(run, 'test', 'baseline')).status, 'spawn-error');
 });
 test('command timeout terminates spawned child tree', async (t) => {

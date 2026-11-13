@@ -1,8 +1,8 @@
-# Electronic Sheeps
+# Electric Sheep
 
 **Make AI-generated code survive the next reasonable changes.**
 
-Electronic Sheeps is a local skill/plugin preview for Claude Code and Codex. Instead of only reviewing the initial solution, your coding agent implements three realistic successive challenges in a disposable Git worktree. A small runner records checks, frozen acceptance tests, checkpoints, and evidence-backed reports.
+Electric Sheep is a local skill/plugin preview for Claude Code and Codex. Instead of only reviewing the initial solution, your coding agent implements three realistic successive challenges in a disposable Git worktree. A small runner records checks, frozen acceptance tests, checkpoints, and evidence-backed reports.
 
 It targets happy-path assumptions, missed edge cases, brittle designs, spaghetti code, and unjustified complexity. It does not treat file length as a verdict or manufacture an arbitrary quality score.
 
@@ -19,13 +19,13 @@ No production npm dependencies or `npm install` are needed to run the tool. Deve
 Clone/download this repository, then launch Claude Code in your project with the plugin's absolute path:
 
 ```bash
-claude --plugin-dir /absolute/path/to/electronic-sheeps
+claude --plugin-dir /absolute/path/to/electric-sheep
 ```
 
 Invoke explicitly:
 
 ```text
-/electronic-sheeps:evolution-stress-test the checkout module
+/electric-sheep:evolution-stress-test the checkout module
 ```
 
 The agent proposes the three challenges and commands before running project code. There is no automatic bootstrap hook or expensive after-every-edit exercise.
@@ -35,7 +35,7 @@ The agent proposes the three challenges and commands before running project code
 Build a complete local bundle outside this repository:
 
 ```bash
-node scripts/package-local.mjs --host codex --out ../electronic-sheeps-codex
+node scripts/package-local.mjs --host codex --out ../electric-sheep-codex
 ```
 
 Copy **the entire generated** `skills/evolution-stress-test` folder into an unused `$HOME/.agents/skills/evolution-stress-test` directory. That generated folder includes its runner: copying only `SKILL.md` or the source skill folder is insufficient. Restart Codex if needed, then invoke:

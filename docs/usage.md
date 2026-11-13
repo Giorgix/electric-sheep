@@ -1,10 +1,10 @@
 # CLI usage
 
-Run `node /absolute/path/to/electronic-sheeps/bin/electronic-sheeps.mjs --help`, or use the plugin's skill-relative `scripts/run.mjs`. No runtime install/build is needed. Node 22+ and Git must already exist.
+Run `node /absolute/path/to/electric-sheep/bin/electric-sheep.mjs --help`, or use the plugin's skill-relative `scripts/run.mjs`. No runtime install/build is needed. Node 22+ and Git must already exist.
 
 ## Commands
 
-All commands accept `--runs-root PATH`, defaulting to `~/.electronic-sheeps/runs`. Keep this outside the source repository. Successful operational output is JSON; diagnostics use stderr. Exit codes: 0 successful operation/checks; 1 blocked, failed, invalid, interrupted exercise or operational failure; 2 usage/JSON input error. A first failed evaluation returns 1 even though one repair remains. `freeze` may return 0 with an expected failing pre-implementation check: that is not an implementation pass.
+All commands accept `--runs-root PATH`, defaulting to `~/.electric-sheep/runs`. Keep this outside the source repository. Successful operational output is JSON; diagnostics use stderr. Exit codes: 0 successful operation/checks; 1 blocked, failed, invalid, interrupted exercise or operational failure; 2 usage/JSON input error. A first failed evaluation returns 1 even though one repair remains. `freeze` may return 0 with an expected failing pre-implementation check: that is not an implementation pass.
 
 | Verb | Required options | Meaning |
 |---|---|---|
@@ -23,6 +23,16 @@ All commands accept `--runs-root PATH`, defaulting to `~/.electronic-sheeps/runs
 | `cleanup` | `--run ID --confirm ID` | Cancel unfinished work, save evidence/report, remove only the owned worktree |
 
 `cleanup --delete-evidence` additionally deletes the entire owned run including reports. This is explicit and destructive. Default cleanup retains reports and logs. No broad `git clean` or `prune` is used.
+
+## Existing runs after a rename
+
+New runs use the current default storage directory. Upgrading does not move or delete earlier run directories. To inspect, resume, report, or clean up a schema-1 run stored elsewhere, pass its existing runs directory explicitly:
+
+```bash
+node /absolute/path/to/electric-sheep/bin/electric-sheep.mjs status --run ID --runs-root /absolute/path/to/previous/runs
+```
+
+Use the directory containing the run-ID folders, not an individual run folder. Keep that location unchanged; ownership records contain absolute paths.
 
 ## Plan JSON
 
@@ -66,10 +76,10 @@ Logs/evidence are local and can contain secrets. Do not publish automatically. T
 ## Local packaging
 
 ```bash
-node scripts/package-local.mjs --host claude --out ../electronic-sheeps-claude
-node scripts/package-local.mjs --host codex --out ../electronic-sheeps-codex
+node scripts/package-local.mjs --host claude --out ../electric-sheep-claude
+node scripts/package-local.mjs --host codex --out ../electric-sheep-codex
 ```
 
-Use fresh output directories outside the source tree. Packaging copies an allowlist, not repository history/settings/tests/credentials. Claude Code: `claude --plugin-dir /absolute/path/to/bundle`; use `/electronic-sheeps:evolution-stress-test TARGET`. Codex: copy the generated complete skill into an unused `~/.agents/skills/evolution-stress-test`, restart if necessary, invoke `$evolution-stress-test TARGET`. On PowerShell, `Copy-Item -Recurse "<bundle>/skills/evolution-stress-test" "$HOME/.agents/skills/evolution-stress-test"` after creating the parent. Do not overwrite an existing skill without reviewing it.
+Use fresh output directories outside the source tree. Packaging copies an allowlist, not repository history/settings/tests/credentials. Claude Code: `claude --plugin-dir /absolute/path/to/bundle`; use `/electric-sheep:evolution-stress-test TARGET`. Codex: copy the generated complete skill into an unused `~/.agents/skills/evolution-stress-test`, restart if necessary, invoke `$evolution-stress-test TARGET`. On PowerShell, `Copy-Item -Recurse "<bundle>/skills/evolution-stress-test" "$HOME/.agents/skills/evolution-stress-test"` after creating the parent. Do not overwrite an existing skill without reviewing it.
 
 The Codex generated skill has an embedded runtime so a standalone copy works without symlinks or guessing a sibling installation path. Do not copy only the source `SKILL.md`. Marketplace submission and live host compatibility are not implied; consult [verification](verification.md).

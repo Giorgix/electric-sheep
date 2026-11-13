@@ -8,7 +8,7 @@ import { promisify } from 'node:util';
 import { packageLocal } from '../scripts/package-local.mjs';
 const source = join(import.meta.dirname, '..');
 async function temp(t) {
-  const root = await mkdtemp(join(tmpdir(), 'sheeps bundles ü '));
+  const root = await mkdtemp(join(tmpdir(), 'electric-sheep bundles ü '));
   t.after(() => rm(root, { recursive: true, force: true }));
   return root;
 }
@@ -24,7 +24,7 @@ for (const host of ['claude', 'codex'])
       ),
     );
     const pkg = JSON.parse(await readFile(join(out, 'package.json'), 'utf8'));
-    assert.equal(manifest.name, 'electronic-sheeps');
+    assert.equal(manifest.name, 'electric-sheep');
     assert.equal(manifest.version, pkg.version);
     assert.equal(
       await readFile(join(out, 'skills/evolution-stress-test/SKILL.md'), 'utf8'),
@@ -34,10 +34,10 @@ for (const host of ['claude', 'codex'])
       await assert.rejects(access(join(out, forbidden)));
     const result = await promisify(execFile)(
       process.execPath,
-      [join(out, 'bin/electronic-sheeps.mjs'), '--help'],
+      [join(out, 'bin/electric-sheep.mjs'), '--help'],
       { cwd: root },
     );
-    assert.match(result.stdout, /Electronic Sheeps/);
+    assert.match(result.stdout, /Electric Sheep/);
   });
 test('standalone Codex skill keeps its runner after copying only the complete generated skill', async (t) => {
   const root = await temp(t),
@@ -51,7 +51,7 @@ test('standalone Codex skill keeps its runner after copying only the complete ge
     [join(installed, 'scripts/run.mjs'), '--help'],
     { cwd: root },
   );
-  assert.match(result.stdout, /Electronic Sheeps/);
+  assert.match(result.stdout, /Electric Sheep/);
 });
 test('unsafe output locations and unknown hosts are rejected without overwrite', async (t) => {
   await assert.rejects(

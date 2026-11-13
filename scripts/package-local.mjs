@@ -44,7 +44,7 @@ export async function packageLocal({ host, out }) {
   )
     throw new Error('Output already exists and is not an empty directory');
   await mkdir(dirname(output), { recursive: true });
-  const stage = await mkdtemp(join(dirname(output), '.sheeps-package-'));
+  const stage = await mkdtemp(join(dirname(output), '.electric-sheep-package-'));
   try {
     const paths = [
       'package.json',

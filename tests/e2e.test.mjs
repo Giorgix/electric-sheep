@@ -28,7 +28,7 @@ async function setup(t) {
   for (const name of await readdir(example))
     files[name] = await readFile(join(example, name), 'utf8');
   const repo = await createRepo({ files });
-  const root = await mkdtemp(join(tmpdir(), 'sheeps demo '));
+  const root = await mkdtemp(join(tmpdir(), 'electric-sheep demo '));
   t.after(async () => {
     await rm(root, { recursive: true, force: true });
     await repo.dispose();

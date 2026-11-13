@@ -5,7 +5,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 const exec = promisify(execFile);
 export async function createRepo({ files = { 'source.txt': 'baseline\n' }, commit = true } = {}) {
-  const root = await mkdtemp(join(tmpdir(), 'sheeps repo ü '));
+  const root = await mkdtemp(join(tmpdir(), 'electric-sheep repo ü '));
   const git = async (...args) =>
     (
       await exec('git', ['-c', 'core.autocrlf=false', ...args], {

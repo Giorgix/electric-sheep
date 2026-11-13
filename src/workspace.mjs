@@ -93,9 +93,9 @@ export async function checkpoint(run, label) {
   const diffPath = await captureDiff(run, label);
   await runGit(run.workspace, [
     '-c',
-    'user.name=Electronic Sheeps',
+    'user.name=Electric Sheep',
     '-c',
-    'user.email=local@electronic-sheeps.invalid',
+    'user.email=local@electric-sheep.invalid',
     'commit',
     '--allow-empty',
     '-m',

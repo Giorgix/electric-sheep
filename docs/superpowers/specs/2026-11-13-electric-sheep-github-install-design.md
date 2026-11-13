@@ -1,6 +1,6 @@
 # Electric Sheep: persistent GitHub installation and consistent naming
 
-Status: proposed for final plan review. The user approved adding a self-hosted catalog and requested a complete rename to Electric Sheep.
+Status: user-approved design and implementation plan; native execution in progress.
 
 ## Intent and scope
 

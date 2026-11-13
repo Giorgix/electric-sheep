@@ -49,6 +49,7 @@ test('both reports describe same failed exercise with attributed evidence', asyn
   const paths = await writeReports(run);
   const report = JSON.parse(await readFile(paths.jsonPath, 'utf8'));
   const md = await readFile(paths.markdownPath, 'utf8');
+  assert.match(md, /^# Electric Sheep evolution report/m);
   assert.equal(report.status, 'failed');
   assert.equal(report.findings[0].origin, 'experimental');
   assert.equal(report.challenges[1].outcome, 'not-run');
@@ -71,6 +72,11 @@ test('metrics exclude binary and declared generated files and survive cleanup', 
   await writeFile(join(run.workspace, 'binary.bin'), Buffer.from([0, 1, 2]));
   await writeFile(join(run.workspace, 'generated'), 'generated content');
   await checkpoint(run, 'metric sample');
+  const { runGit } = await import('../src/git.mjs');
+  assert.equal(
+    await runGit(run.workspace, ['log', '-1', '--format=%an <%ae>']),
+    'Electric Sheep <local@electric-sheep.invalid>',
+  );
   const deltas = await collectDeltas(run);
   const files = deltas.flatMap((d) => d.files);
   assert.ok(files.some((f) => f.path === 'change.txt' && f.added === 2));

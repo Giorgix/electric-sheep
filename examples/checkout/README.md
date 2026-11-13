@@ -4,7 +4,7 @@ This is a dependency-free toy baseline, not production payment software. `total(
 
 ## Try it
 
-Copy this directory into a new temporary directory **outside** the Electronic Sheeps checkout, initialize it as a Git repository, add/commit these sample files, and run:
+Copy this directory into a new temporary directory **outside** the Electric Sheep checkout, initialize it as a Git repository, add/commit these sample files, and run:
 
 ```bash
 node --test checkout.test.mjs
@@ -13,8 +13,8 @@ node --test checkout.test.mjs
 No installation, payment service, network, or credentials are needed. Then use the installed skill to stress-test this sample, or inspect the runner manually:
 
 ```bash
-node /absolute/path/to/electronic-sheeps/bin/electronic-sheeps.mjs inspect --repo /absolute/path/to/sample --scope checkout.mjs
-node /absolute/path/to/electronic-sheeps/bin/electronic-sheeps.mjs start --repo /absolute/path/to/sample --plan /absolute/path/to/sample/exercise.json --approval-note "I reviewed and approve the local sample commands and requirements"
+node /absolute/path/to/electric-sheep/bin/electric-sheep.mjs inspect --repo /absolute/path/to/sample --scope checkout.mjs
+node /absolute/path/to/electric-sheep/bin/electric-sheep.mjs start --repo /absolute/path/to/sample --plan /absolute/path/to/sample/exercise.json --approval-note "I reviewed and approve the local sample commands and requirements"
 ```
 
 Retain the returned run ID and worktree path. Run `baseline --run ID`. Only in that worktree, write `round1.test.mjs` from the first agreed requirement, then `freeze --run ID`, implement it, and `evaluate --run ID`. Repeat for rounds 2 and 3, preserving earlier checks. `report --run ID` writes evidence-backed Markdown/JSON. `cleanup --run ID --confirm ID` removes the experiment and retains reports.

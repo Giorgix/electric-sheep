@@ -1,11 +1,11 @@
-# Electronic Sheeps: evolution stress testing
+# Electric Sheep: evolution stress testing
 
 Status: approved by the user in this conversation.
 Date: 2026-11-12
 
 ## Intent
 
-Electronic Sheeps is an installable skill/plugin pack for coding agents. It challenges software through realistic successive changes, exposing solutions that work initially but become brittle, tangled, unnecessarily complex, or incorrect outside the happy path.
+Electric Sheep is an installable skill/plugin pack for coding agents. It challenges software through realistic successive changes, exposing solutions that work initially but become brittle, tangled, unnecessarily complex, or incorrect outside the happy path.
 
 The user wants something as easy to use across projects as Superpowers, initially for Claude Code and OpenAI Codex. This is not a new editor, hosted service, or model provider.
 
@@ -144,7 +144,7 @@ The baseline is the recorded commit, not an implied snapshot of the user's edito
 
 ### Workspace ownership
 
-Store runs outside the source checkout, under a user-local Electronic Sheeps directory. Every run has an opaque unique ID, an ownership marker, a manifest, an evidence directory, and its own worktree. Use restrictive filesystem permissions where supported and warn that logs can contain sensitive data.
+Store runs outside the source checkout, under a user-local Electric Sheep directory. Every run has an opaque unique ID, an ownership marker, a manifest, an evidence directory, and its own worktree. Use restrictive filesystem permissions where supported and warn that logs can contain sensitive data.
 
 All generated requirements, tests, and code changes stay in the worktree. Runner-owned Git operations do not invoke repository hooks. Checkpoints are local detached commits in the disposable worktree, never commits on the user's branch. Do not push or change remotes. Git worktrees share repository metadata and object storage; this is source-change isolation, not full repository or host isolation.
 
@@ -166,7 +166,7 @@ Inspect the requested scope, repository instructions, existing tests, and releva
 
 ### 2. Establish the baseline
 
-Create the isolated worktree and run the approved baseline checks. Record the source commit and all outcomes. A failing baseline stops the exercise as baseline-blocked; it is not an Electronic Sheeps discovery. Missing tooling or unavailable dependencies produces a blocked result with instructions, not a pass.
+Create the isolated worktree and run the approved baseline checks. Record the source commit and all outcomes. A failing baseline stops the exercise as baseline-blocked; it is not an Electric Sheep discovery. Missing tooling or unavailable dependencies produces a blocked result with instructions, not a pass.
 
 If there are no useful existing tests, propose a minimal baseline smoke/contract check for approval before proceeding. Label the resulting regression coverage as limited. An empty test run is not a meaningful baseline pass.
 

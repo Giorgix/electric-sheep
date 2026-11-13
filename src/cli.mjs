@@ -16,8 +16,8 @@ import {
 } from './protocol.mjs';
 import { addFinding, collectDeltas, writeReports } from './report.mjs';
 
-const help = `Electronic Sheeps — isolated evolution stress tests
-Usage: electronic-sheeps <verb> [options]
+const help = `Electric Sheep — isolated evolution stress tests
+Usage: electric-sheep <verb> [options]
   inspect --repo PATH --scope PATH
   start --repo PATH --plan FILE --approval-note TEXT
   baseline|freeze|evaluate|status|report|resume --run ID
@@ -26,7 +26,7 @@ Usage: electronic-sheeps <verb> [options]
   recover-lock --run ID --approval-note TEXT
   cancel --run ID --note TEXT
   cleanup --run ID --confirm ID [--delete-evidence]
-All verbs accept --runs-root PATH (default ~/.electronic-sheeps/runs).
+All verbs accept --runs-root PATH (default ~/.electric-sheep/runs).
 A worktree is not a security sandbox. No project commands run until baseline.
 `;
 class UsageError extends Error {}
@@ -80,7 +80,7 @@ export async function main(argv, { stdout = process.stdout, stderr = process.std
         (typeof values[name] !== 'string' || !values[name].trim())
       )
         throw new UsageError(`Missing --${name}`);
-    const root = resolve(values['runs-root'] ?? join(homedir(), '.electronic-sheeps/runs'));
+    const root = resolve(values['runs-root'] ?? join(homedir(), '.electric-sheep/runs'));
     let output;
     if (verb === 'inspect') {
       output = await inspectRepository({ repo: values.repo, scope: values.scope ?? ['.'] });

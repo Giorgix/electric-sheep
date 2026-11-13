@@ -1,4 +1,4 @@
-# Electronic Sheeps Evolution Stress Test Implementation Plan
+# Electric Sheep Evolution Stress Test Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -53,7 +53,7 @@ At planning time the workspace contained only design documentation and was not a
 
 ```text
 package.json                         # package metadata, bin, npm test/check scripts
-bin/electronic-sheeps.mjs             # CLI entry point only
+bin/electric-sheep.mjs                # CLI entry point only
 src/contracts.mjs                    # defaults, input validation, JSDoc data contracts
 src/git.mjs                          # runner-owned Git invocation policy
 src/repository.mjs                   # read-only repository/scope prerequisites
@@ -102,7 +102,7 @@ Define these in JSDoc in `src/contracts.mjs`; subsequent tasks use the same name
 
 Reports expose `status` as `run.outcome ?? run.phase`, `roleSeparation` from the approved plan, `findings`, and `challenges` derived from recorded rounds with `id`, `requirement`, `outcome`, and `evidenceRefs`. Round `frozen` maps to report outcome `in-progress`; other round statuses retain their names. Evidence references are run-relative files under `evidence/`, not arbitrary absolute paths; referenced command IDs are resolved to their saved artifacts. Reports also include the full baseline, approval, environment, and limitation records from the spec.
 
-Persist a run as `manifest.json` with immutable numbered evidence files under `evidence/`, worktree under `worktree/`, and an ownership marker beside the manifest. Default run root is `~/.electronic-sheeps/runs`; expose `--runs-root` for testing and deliberate alternate storage. Reject roots nested inside the source repository. Use opaque UUID run IDs, not user-controlled filesystem paths.
+Persist a run as `manifest.json` with immutable numbered evidence files under `evidence/`, worktree under `worktree/`, and an ownership marker beside the manifest. Default run root is `~/.electric-sheep/runs`; expose `--runs-root` for testing and deliberate alternate storage. Reject roots nested inside the source repository. Use opaque UUID run IDs, not user-controlled filesystem paths.
 
 Approval amendments replace the plan with an explicitly recorded version, preserving the earlier approved copy and hash. They may add commands or narrowly authorize acceptance-test changes, but cannot erase past failures or increase completed-round counts. V1 accepts exactly three challenges; non-default challenge counts are deferred rather than adding premature budget configuration.
 
@@ -241,7 +241,7 @@ Approval amendments replace the plan with an explicitly recorded version, preser
 
 ## Task 7: A complete CLI workflow with interruption recovery
 
-**Files:** Create `bin/electronic-sheeps.mjs`, `src/cli.mjs`, `tests/cli.test.mjs`; modify `package.json` to register the bin and publishable file list.
+**Files:** Create `bin/electric-sheep.mjs`, `src/cli.mjs`, `tests/cli.test.mjs`; modify `package.json` to register the bin and publishable file list.
 
 **Interfaces:** Produce `main(argv: string[], {stdout, stderr}: object): Promise<number>`. Entry point calls it and sets `process.exitCode`; importing it does not execute commands.
 
@@ -266,7 +266,7 @@ CLI verbs (all support `--runs-root`):
   Include malformed/truncated JSON, another process holding a lock, cleanup twice, missing/moved source repository, start failure after run creation, and SIGINT during a fixture command. Status/report must remain useful without executing source code or assuming all artifacts exist.
 - [ ] **Step 2: Verify RED.** Run `node --test tests/cli.test.mjs`.
 - [ ] **Step 3: Implement the CLI.** Use `util.parseArgs` with verb-specific options and reject unknown flags. Output machine-readable JSON on successful operational commands; diagnostics go to stderr. Use exit code `0` for successful operations and passed checks, `1` for unsuccessful/blocked/invalid exercises or execution failure, and `2` for usage/input errors. Read-only status/report may succeed for failed runs. Acquire one run lock for every mutating verb, persist interruption, and route commands through protocol interfaces only. Explicit cleanup confirmation must match the UUID; never accept an arbitrary deletion path. Before worktree deletion, collect/persist deltas and write reports while source artifacts are still available. For an unfinished exercise, cleanup first records cancellation so the report retains a truthful terminal outcome. Already-cleaned owned runs return an idempotent result; full evidence deletion is separately explicit.
-- [ ] **Step 4: Verify GREEN.** Run the task tests, `node bin/electronic-sheeps.mjs --help`, and `npm test`. The CLI can run the complete fixture without importing test helpers into production code.
+- [ ] **Step 4: Verify GREEN.** Run the task tests, `node bin/electric-sheep.mjs --help`, and `npm test`. The CLI can run the complete fixture without importing test helpers into production code.
 - [ ] **Step 5: Commit** with `feat: expose bounded evolution exercises through a local CLI`.
 
 ## Task 8: One portable skill with relevant challenges and calibrated assessment
@@ -290,8 +290,8 @@ CLI verbs (all support `--runs-root`):
 - [ ] **Step 1: Check current host requirements.** Use installed Claude CLI help and authoritative current host/plugin documentation to settle supported local installation/loading commands and Codex skill metadata. Do not copy Superpowers' author identity, branding, publisher URLs, portal metadata, or unneeded assets. Record versions and references; the current environment has a `claude` executable but no `codex` executable on PATH.
 - [ ] **Step 2: Write failing packaging tests.** Name tests `bundles include executable runner and shared skill`, `installed paths are independent of target cwd`, and `unsafe outputs are rejected`:
   ```js
-  assert.equal(claudeManifest.name, 'electronic-sheeps');
-  assert.equal(codexManifest.name, 'electronic-sheeps');
+  assert.equal(claudeManifest.name, 'electric-sheep');
+  assert.equal(codexManifest.name, 'electric-sheep');
   assert.equal(claudeManifest.version, packageJson.version);
   assert.equal(codexManifest.version, packageJson.version);
   assert.equal(await bundledRunnerHelpFromForeignCwd(), 0);

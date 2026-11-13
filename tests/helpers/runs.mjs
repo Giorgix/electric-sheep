@@ -7,7 +7,7 @@ import { inspectRepository } from '../../src/repository.mjs';
 import { createRun } from '../../src/store.mjs';
 export async function createExercise(t, { files, plan = examplePlan() } = {}) {
   const repo = await createRepo(files ? { files } : {});
-  const root = await mkdtemp(join(tmpdir(), 'sheeps exercise '));
+  const root = await mkdtemp(join(tmpdir(), 'electric-sheep exercise '));
   t.after(async () => {
     await rm(root, { recursive: true, force: true, maxRetries: 3 });
     await repo.dispose();
