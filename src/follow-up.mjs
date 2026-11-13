@@ -81,10 +81,12 @@ export function buildFollowUp(report, input) {
       : 'Runner-template draft: priorities, target paths, and project-specific steps need agent/user review.',
     'Experimental requirements are not automatically approved production features. Passing checks do not certify correctness.',
   ];
-  if (!actions.length)
+  if (!report.findings.length)
     notes.push(
       'No agent findings recorded; no defects or implementation tasks are inferred. Review coverage and untested requirements.',
     );
+  else if (!actions.length)
+    notes.push('No implementation actions proposed; review the recorded findings and coverage.');
   if (report.status === 'blocked')
     notes.push(
       'Diagnose the blocked baseline/setup and recover a meaningful test environment first; this is not a discovered defect.',
@@ -161,10 +163,7 @@ export function selectFollowUp(followUp, priorities) {
     view.notes.push(
       `Prerequisite ${id} included for ${[...requiredBy.get(id)].join(', ')} despite its priority.`,
     );
-  if (!view.actions.length)
-    view.notes.push(
-      'No actions match the selected priorities; findings remain in the complete report.',
-    );
+  if (!view.actions.length) view.notes.push('No actions match the selected priorities.');
   return view;
 }
 function header(report, title) {
