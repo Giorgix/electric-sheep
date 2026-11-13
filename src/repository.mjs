@@ -1,10 +1,10 @@
 import { realpath, stat } from 'node:fs/promises';
-import { resolve, relative, isAbsolute } from 'node:path';
+import { resolve, relative, isAbsolute, sep } from 'node:path';
 import { relativePath } from './contracts.mjs';
 import { runGit } from './git.mjs';
 export function contained(parent, child) {
   const rel = relative(parent, child);
-  return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
+  return rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel);
 }
 export async function assertNoFilters(root) {
   const files = await runGit(root, [
