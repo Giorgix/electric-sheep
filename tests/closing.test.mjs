@@ -81,6 +81,28 @@ for (const reason of [
     await access(run.workspace);
     assert.notEqual(run.phase, 'cleaned');
   });
+for (const damage of ['changed evidence', 'changed output', 'missing output', 'missing manifest'])
+  test(`cleanup refuses a previously published package with ${damage}`, async (t) => {
+    const { run, root } = await protocolFixture(t);
+    await writeFile(join(run.workspace, 'value.mjs'), 'export const value=1;\n');
+    const checkpointed = await checkpoint(run, 'retained earlier change');
+    const paths = await writeReports(run);
+    if (damage === 'changed evidence')
+      await writeFile(join(run.directory, checkpointed.diffPath), 'corrupt patch');
+    if (damage === 'changed output') await writeFile(paths.agentPromptPath, 'changed prompt');
+    if (damage === 'missing output') await rm(paths.agentPromptPath);
+    if (damage === 'missing manifest') await rm(paths.outputManifestPath);
+    await assert.rejects(finalizeCleanup(run, { cwd: root }));
+    await access(run.workspace);
+    assert.notEqual((await loadRun(root, run.id)).phase, 'cleaned');
+  });
+test('cleanup upgrades legacy report-only output before verified removal', async (t) => {
+  const { run, root } = await protocolFixture(t);
+  await writeFile(join(run.directory, 'report.md'), '# Legacy report');
+  await writeFile(join(run.directory, 'report.json'), '{}');
+  assert.equal((await finalizeCleanup(run, { cwd: root })).verified, true);
+  await verifyOutputBundle(run);
+});
 test('locked worktree removal failure retains outputs and retry succeeds', async (t) => {
   const { run, root, repo } = await protocolFixture(t);
   run.phase = 'failed';
@@ -145,6 +167,19 @@ test('missing source prevents cleanup without destroying retained files', async 
   await assert.rejects(finalizeCleanup(run, { cwd: root }));
   await access(run.workspace);
   await verifyOutputBundle(run);
+});
+test('failed destructive purge does not promise evidence retention', async (t) => {
+  const { run, root, repo } = await protocolFixture(t);
+  await repo.git('worktree', 'lock', run.workspace);
+  try {
+    await assert.rejects(finalizeCleanup(run, { cwd: root, deleteEvidence: true }), (error) => {
+      assert.match(error.message, /cleanup failed/i);
+      assert.doesNotMatch(error.message, /output retained/i);
+      return true;
+    });
+  } finally {
+    await repo.git('worktree', 'unlock', run.workspace);
+  }
 });
 test('explicit purge reports no retained evidence and verifies deletion', async (t) => {
   const { run, root } = await protocolFixture(t);

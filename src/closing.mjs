@@ -9,7 +9,7 @@ import {
   cleanupWorkspace,
 } from './workspace.mjs';
 import { collectDeltas, writeReports } from './report.mjs';
-import { verifyOutputBundle } from './outputs.mjs';
+import { outputPaths, verifyOutputBundle } from './outputs.mjs';
 import { cancelRun } from './protocol.mjs';
 
 async function optionalInfo(path) {
@@ -32,6 +32,22 @@ export async function finalizeCleanup(run, { deleteEvidence = false, cwd = proce
     throw new Error(
       'Running command records: confirm processes stopped, then resume before cleanup',
     );
+  // Do not silently bless corrupted prior evidence by hashing it afresh.
+  // Legacy report-only runs have no follow-up artifacts/manifest yet.
+  const prior = outputPaths(run);
+  if (await optionalInfo(prior.outputManifestPath)) await verifyOutputBundle(run);
+  else if (
+    (
+      await Promise.all(
+        [prior.nextActionsPath, prior.implementationPlanPath, prior.agentPromptPath].map(
+          optionalInfo,
+        ),
+      )
+    ).some(Boolean)
+  )
+    throw new Error(
+      'Incomplete prior output bundle; inspect evidence and regenerate reports before cleanup',
+    );
   const existing = await optionalInfo(run.workspace);
   const registered = await isWorkspaceRegistered(run);
   if (run.phase === 'cleaned') {
@@ -52,8 +68,11 @@ export async function finalizeCleanup(run, { deleteEvidence = false, cwd = proce
   try {
     await cleanupWorkspace(run, { deleteEvidence });
   } catch (error) {
+    const retention = deleteEvidence
+      ? 'inspect remaining output; evidence purge may be partial'
+      : 'output retained';
     throw new Error(
-      `Cleanup failed; output retained. Inspect locks/processes/ownership and retry: ${error.message}`,
+      `Cleanup failed; ${retention}. Inspect locks/processes/ownership and retry: ${error.message}`,
       { cause: error },
     );
   }
