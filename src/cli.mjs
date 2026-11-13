@@ -7,7 +7,7 @@ import { inspectRepository } from './repository.mjs';
 import { createRun, loadRun, withRunLock, recoverLock } from './store.mjs';
 import { createWorkspace } from './workspace.mjs';
 import { finalizeCleanup } from './closing.mjs';
-import { validateFollowUp } from './follow-up.mjs';
+import { validateFollowUp, validatePriorities } from './follow-up.mjs';
 import {
   runBaseline,
   freezeChallenge,
@@ -23,7 +23,7 @@ Usage: electric-sheep <verb> [options]
   inspect --repo PATH --scope PATH
   start --repo PATH --plan FILE --approval-note TEXT
   baseline|freeze|evaluate|status|resume --run ID
-  report --run ID [--follow-up FILE]
+  report --run ID [--follow-up FILE] [--priority VALUE ...]
   amend --run ID --plan FILE --approval-note TEXT
   finding --run ID --file FILE
   recover-lock --run ID --approval-note TEXT
@@ -40,7 +40,7 @@ const flags = {
   freeze: ['run'],
   evaluate: ['run'],
   status: ['run'],
-  report: ['run', 'follow-up'],
+  report: ['run', 'follow-up', 'priority'],
   resume: ['run'],
   amend: ['run', 'plan', 'approval-note'],
   finding: ['run', 'file'],
@@ -68,7 +68,7 @@ export async function main(argv, { stdout = process.stdout, stderr = process.std
       options[name] =
         name === 'delete-evidence'
           ? { type: 'boolean' }
-          : name === 'scope'
+          : ['scope', 'priority'].includes(name)
             ? { type: 'string', multiple: true }
             : { type: 'string' };
     let values;
@@ -79,7 +79,7 @@ export async function main(argv, { stdout = process.stdout, stderr = process.std
     }
     for (const name of flags[verb])
       if (
-        !['delete-evidence', 'scope', 'follow-up'].includes(name) &&
+        !['delete-evidence', 'scope', 'follow-up', 'priority'].includes(name) &&
         (typeof values[name] !== 'string' || !values[name].trim())
       )
         throw new UsageError(`Missing --${name}`);
@@ -131,6 +131,9 @@ export async function main(argv, { stdout = process.stdout, stderr = process.std
           case 'cancel':
             return cancelRun(run, values.note);
           case 'report': {
+            let priorities;
+            try { priorities = validatePriorities(values.priority); }
+            catch (error) { throw new UsageError(error.message); }
             let followUp;
             if (values['follow-up'] !== undefined) {
               try {
@@ -142,7 +145,7 @@ export async function main(argv, { stdout = process.stdout, stderr = process.std
               }
             }
             await collectDeltas(run);
-            return writeReports(run, { followUp });
+            return writeReports(run, { followUp, priorities });
           }
           case 'cleanup':
             return finalizeCleanup(run, { deleteEvidence: values['delete-evidence'] ?? false });

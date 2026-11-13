@@ -3,6 +3,8 @@ import { join, resolve } from 'node:path';
 import {
   buildFollowUp,
   validateFollowUp,
+  validatePriorities,
+  selectFollowUp,
   renderNextActions,
   renderImplementationPlan,
   renderAgentPrompt,
@@ -127,7 +129,7 @@ export async function collectDeltas(run) {
   await saveRun(run);
   return run.deltas;
 }
-export async function buildReport(run) {
+export async function buildReport(run, { priorities } = {}) {
   const report = {
     schemaVersion: 1,
     id: run.id,
@@ -175,7 +177,7 @@ export async function buildReport(run) {
         'Inspect status; resume only after prior processes have stopped. Cleanup requires explicit run-id confirmation. No fixes are merged automatically.',
     },
   };
-  report.followUp = buildFollowUp(report, run.followUp);
+  report.followUp = selectFollowUp(buildFollowUp(report, run.followUp), priorities);
   return report;
 }
 const escape = (value) => String(value).replace(/[&<>\[\]`*_\\]/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -244,13 +246,14 @@ function markdown(report) {
   );
   return lines.join('\n');
 }
-export async function writeReports(run, { followUp } = {}) {
+export async function writeReports(run, { followUp, priorities } = {}) {
+  const selected = validatePriorities(priorities);
   if (followUp !== undefined) {
     const validated = validateFollowUp(followUp, { findings: run.findings });
     run.followUp = validated;
     await saveRun(run);
   }
-  const report = await buildReport(run);
+  const report = await buildReport(run, { priorities: selected });
   const artifacts = [...run.protectedArtifacts, ...run.rounds.flatMap((r) => r.protectedArtifacts)];
   const evidenceRefs = [
     ...run.findings.flatMap((f) => f.evidenceRefs),

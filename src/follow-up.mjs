@@ -126,6 +126,43 @@ export function buildFollowUp(report, input) {
     }),
   };
 }
+export function validatePriorities(value) {
+  if (value === undefined) return undefined;
+  strings(value, 'priorities');
+  if (value.some((p) => !['high', 'medium', 'low', 'untriaged'].includes(p)))
+    throw new Error('Invalid priority selection');
+  return [...new Set(value)];
+}
+export function selectFollowUp(followUp, priorities) {
+  const selected = validatePriorities(priorities);
+  if (selected === undefined) return followUp;
+  const view = structuredClone(followUp);
+  const byId = new Map(view.actions.map((a) => [a.id, a]));
+  const roots = view.actions.filter((a) => selected.includes(a.priority));
+  const included = new Set(roots.map((a) => a.id));
+  const requiredBy = new Map();
+  function includeDependencies(action) {
+    for (const id of action.dependsOn) {
+      if (!byId.has(id)) throw new Error(`Unknown dependency: ${id}`);
+      if (!requiredBy.has(id)) requiredBy.set(id, new Set());
+      requiredBy.get(id).add(action.id);
+      if (!included.has(id)) {
+        included.add(id);
+        includeDependencies(byId.get(id));
+      }
+    }
+  }
+  roots.forEach(includeDependencies);
+  view.actions = view.actions.filter((a) => included.has(a.id));
+  const dependencyIds = view.actions.filter((a) => !selected.includes(a.priority)).map((a) => a.id);
+  view.selection = { priorities: selected, dependencyIds };
+  view.notes.push(`Selected priorities: ${selected.join(', ')}`);
+  for (const id of dependencyIds)
+    view.notes.push(`Prerequisite ${id} included for ${[...requiredBy.get(id)].join(', ')} despite its priority.`);
+  if (!view.actions.length)
+    view.notes.push('No actions match the selected priorities; findings remain in the complete report.');
+  return view;
+}
 function header(report, title) {
   return [
     `# ${title}`,
