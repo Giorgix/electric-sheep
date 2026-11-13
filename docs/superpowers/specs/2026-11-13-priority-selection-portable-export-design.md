@@ -1,6 +1,6 @@
 # Electric Sheep 0.4.0: priority selection and portable export
 
-Status: short adoption design approved by the user ("ys"); this document records that scope. Implementation-plan review remains required before runtime changes.
+Status: adoption design and written implementation plan approved; user authorized continuous native execution through a merge-ready, unmerged PR and a read-only Claude Code Sonnet 5.5 review.
 Date: 2026-11-13.
 Base: merged `main`, `e451b5110d8878da60a181122db087a5ae455606`.
 
@@ -48,7 +48,7 @@ Destination policy deliberately matches the tested experiment:
 - Create the destination exclusively, write evidence/deliverables exclusively, publish outputs.json last, then read back and verify.
 - Reject missing/changed source evidence and escaping references. On later I/O failure return an error and retain the partial directory for inspection; do not claim success, silently overwrite it, or automatically remove arbitrary paths.
 
-The existing owned verifier keeps ownership checks. A separate `verifyPortableBundle(directory, expectedRunId?)` verifies fixed files, manifest identity when supplied, evidence containment and hashes without requiring the old owner/location. Hashes establish consistency, not authenticity or correctness of findings.
+The existing owned verifier keeps ownership checks. A separate `verifyPortableBundle(directory, expectedRunId?)` verifies fixed files, manifest identity when supplied, report identity/reference consistency, evidence containment and hashes without requiring the old owner/location. Hashes establish consistency, not authenticity or correctness of findings.
 
 ## Runtime boundaries
 
@@ -65,7 +65,7 @@ Describe the new CLI options and opt-in usage without changing the canonical thr
 
 Replay tests before implementation to observe RED on current main, then restore source patches in order and verify GREEN. Add focused compatibility tests for fallback/empty selection, owned-vs-portable verifier boundaries and incomplete/foreign archives. Exercise the actual independently copied skill's priority/export operation from an unrelated spaced/Unicode cwd after its original bundle is removed, including verification after fixture cleanup.
 
-Run full tests, syntax, formatting, package contents, strict Claude catalog/plugin validation and actual Ubuntu/Windows/macOS × Node 22/24 CI. Reproduced failures get regressions; preserve existing checks. No independent reviewer tool is available: author review must be labeled as such; copied-runtime tests do not establish live host instruction-following.
+Run full tests, syntax, formatting, package contents, strict Claude catalog/plugin validation and actual Ubuntu/Windows/macOS × Node 22/24 CI. Reproduced failures get regressions; preserve existing checks. No native subagent tool is available; implementation is inline. The user's subsequent instruction authorized fresh-context read-only Claude Code review using Sonnet 5.5 (`claude-sonnet-5-5`), alongside author checks. Neither model review nor copied-runtime tests establish live host instruction-following or security assurance.
 
 ## Explicitly unproven/deferred
 

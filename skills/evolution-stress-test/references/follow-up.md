@@ -35,7 +35,7 @@ Repeatable `high|medium|low|untriaged` values form a deduplicated union. Validat
 
 Export verifies the existing source publication before copying; corruption must not acquire replacement source hashes. Require an absent destination under an existing canonical/physical parent outside the source repository and runs root. Resolve aliases first (including macOS `/var` to `/private/var` where applicable); existing files/directories and symlink/junction parents are refused. Success returns `portable: true`, `verified: true`, a directory and paths. Move the entire archive: operational links are relative; original repository/command metadata is historical. It is data without an owner marker, not a run to adopt, replay or pass to cleanup.
 
-**Selection is not redaction.** Complete findings and referenced evidence for unselected actions remain. Review reports/logs for sensitive data before any user-directed sharing; nothing is automatically uploaded. Hashes prove consistency, not authenticity or correctness. Verify a relocated archive with the trusted runner's `verifyPortableBundle(directory, expectedRunId?)` from `src/outputs.mjs` (standalone copied skill: `scripts/runner/src/outputs.mjs`), without executing archived commands. The original owned verifier and cleanup retain their ownership requirements.
+**Selection is not redaction.** Complete findings and referenced evidence for unselected actions remain. Review reports/logs for sensitive data before any user-directed sharing; nothing is automatically uploaded. Hashes prove consistency, not authenticity or correctness. Verify a relocated archive with the trusted runner's `verifyPortableBundle(directory, expectedRunId?)` from `src/outputs.mjs` (standalone copied skill: `scripts/runner/src/outputs.mjs`), without executing archived commands. The verifier also cross-checks the report's identity and declared evidence against the manifest. The original owned verifier and cleanup retain their ownership requirements.
 
 Evidence is buffered in memory; large-package/resource limits and interrupted writes have not been measured. Export creates exclusively, publishes its manifest last and verifies read-back. A later write failure leaves a partial directory and diagnostic; do not call it verified or overwrite/delete it automatically. Inspect the failure and choose a fresh destination. No new host/model instruction-following guarantee follows from these file/runner checks.
 
@@ -45,7 +45,7 @@ After showing the verified output, ask:
 
 > Remove the experimental worktree while keeping the reports, plan, prompt, logs and diffs, or keep it for inspection?
 
-If the user chooses keep or gives no answer, retain it and say where it is. Report generation and the returned `closing` descriptor are not consent to delete. Never silently choose removal or routinely offer `--delete-evidence`.
+If the user chooses keep or gives no answer, retain it and say where it is. Report generation and the returned `closing` descriptor are not consent to delete. Cleanup regenerates the full view from saved actions, not the last selected view; export a selected view first if it should be retained independently. Never silently choose removal or routinely offer `--delete-evidence`.
 
 On explicit removal consent:
 
