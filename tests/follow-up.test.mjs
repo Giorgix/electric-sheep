@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   validateFollowUp,
   buildFollowUp,
+  selectFollowUp,
   renderNextActions,
   renderImplementationPlan,
   renderAgentPrompt,
@@ -162,6 +163,25 @@ for (const status of ['completed', 'blocked', 'failed', 'cancelled', 'invalid'])
     assert.match(text, /no .*findings|no .*defects/i);
     if (status === 'blocked') assert.match(text, /diagnos|baseline/i);
   });
+test('authored empty action view does not deny recorded findings', () => {
+  const report = followUpReport();
+  const result = buildFollowUp(report, { schemaVersion: 1, actions: [] });
+  assert.deepEqual(result.actions, []);
+  assert.equal(result.source, 'host-agent');
+  assert.doesNotMatch(result.notes.join(' '), /no agent findings recorded/i);
+  assert.match(result.notes.join(' '), /no implementation actions/i);
+  assert.deepEqual(
+    report.findings.map((f) => f.id),
+    ['risk', 'defect', 'coupling'],
+  );
+});
+test('selected no-findings view never claims findings remain', () => {
+  const report = { ...followUpReport(), findings: [] };
+  const result = selectFollowUp(buildFollowUp(report), ['high']);
+  assert.deepEqual(result.actions, []);
+  assert.match(result.notes.join(' '), /no agent findings recorded/i);
+  assert.doesNotMatch(result.notes.join(' '), /findings remain/i);
+});
 test('handoff remains usable without a worktree and never trusts agent text over gates', () => {
   const report = followUpReport();
   const input = followUpInput('defect');

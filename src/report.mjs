@@ -3,6 +3,8 @@ import { join, resolve } from 'node:path';
 import {
   buildFollowUp,
   validateFollowUp,
+  validatePriorities,
+  selectFollowUp,
   renderNextActions,
   renderImplementationPlan,
   renderAgentPrompt,
@@ -12,6 +14,8 @@ import { nonempty, relativePath } from './contracts.mjs';
 import { contained } from './repository.mjs';
 import { runGit } from './git.mjs';
 import { saveRun } from './store.mjs';
+import { evidenceReferences } from './evidence.mjs';
+export { evidenceReferences } from './evidence.mjs';
 
 export async function addFinding(run, input) {
   const finding = structuredClone(input);
@@ -127,7 +131,7 @@ export async function collectDeltas(run) {
   await saveRun(run);
   return run.deltas;
 }
-export async function buildReport(run) {
+export async function buildReport(run, { priorities } = {}) {
   const report = {
     schemaVersion: 1,
     id: run.id,
@@ -175,7 +179,7 @@ export async function buildReport(run) {
         'Inspect status; resume only after prior processes have stopped. Cleanup requires explicit run-id confirmation. No fixes are merged automatically.',
     },
   };
-  report.followUp = buildFollowUp(report, run.followUp);
+  report.followUp = selectFollowUp(buildFollowUp(report, run.followUp), priorities);
   return report;
 }
 const escape = (value) => String(value).replace(/[&<>\[\]`*_\\]/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -244,34 +248,27 @@ function markdown(report) {
   );
   return lines.join('\n');
 }
-export async function writeReports(run, { followUp } = {}) {
+export function reportContents(report, context) {
+  return {
+    'report.json': JSON.stringify(report, null, 2) + '\n',
+    'report.md': markdown(report),
+    'next-actions.md': renderNextActions(report),
+    'implementation-plan.md': renderImplementationPlan(report),
+    'agent-prompt.md': renderAgentPrompt(report, context),
+  };
+}
+export async function writeReports(run, { followUp, priorities } = {}) {
+  const selected = validatePriorities(priorities);
   if (followUp !== undefined) {
     const validated = validateFollowUp(followUp, { findings: run.findings });
     run.followUp = validated;
     await saveRun(run);
   }
-  const report = await buildReport(run);
-  const artifacts = [...run.protectedArtifacts, ...run.rounds.flatMap((r) => r.protectedArtifacts)];
-  const evidenceRefs = [
-    ...run.findings.flatMap((f) => f.evidenceRefs),
-    ...run.commandResults.flatMap((r) => [r.stdoutPath, r.stderrPath]),
-    ...run.events.map((e) => e.diffPath),
-    ...run.deltas.map((d) => d.evidenceRef),
-    ...artifacts.map((a) => a.evidencePath),
-  ].filter(Boolean);
+  const report = await buildReport(run, { priorities: selected });
   const paths = await writeOutputBundle(
     run,
-    {
-      'report.json': JSON.stringify(report, null, 2) + '\n',
-      'report.md': markdown(report),
-      'next-actions.md': renderNextActions(report),
-      'implementation-plan.md': renderImplementationPlan(report),
-      'agent-prompt.md': renderAgentPrompt(report, {
-        directory: run.directory,
-        ...outputPaths(run),
-      }),
-    },
-    evidenceRefs,
+    reportContents(report, { directory: run.directory, ...outputPaths(run) }),
+    evidenceReferences(run),
   );
   return { ...paths, closing: describeClosing(run, paths) };
 }

@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, readFile, access, writeFile, cp } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, access, writeFile, cp, realpath, rename } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
+import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFile } from 'node:child_process';
@@ -56,7 +58,9 @@ test('standalone Codex skill keeps its runner after copying only the complete ge
   );
   assert.match(result.stdout, /Electric Sheep/);
   const fixture = await protocolFixture(t);
-  await addFinding(fixture.run, findingInput('boundary-risk'));
+  const proof = 'evidence/copied-proof.artifact';
+  await writeFile(join(fixture.run.directory, proof), 'synthetic copied-runtime evidence\n');
+  await addFinding(fixture.run, { ...findingInput('boundary-risk'), evidenceRefs: [proof] });
   const args = ['--run', fixture.run.id, '--runs-root', fixture.root];
   const report = await promisify(execFile)(
     process.execPath,
@@ -66,12 +70,55 @@ test('standalone Codex skill keeps its runner after copying only the complete ge
       ...args,
       '--follow-up',
       join(installed, 'references/follow-up.example.json'),
+      '--priority',
+      'untriaged',
     ],
     { cwd: root },
   );
   const paths = JSON.parse(report.stdout);
   await access(paths.agentPromptPath);
   await access(fixture.run.workspace);
+  const selected = JSON.parse(await readFile(paths.jsonPath, 'utf8'));
+  assert.equal(selected.id, fixture.run.id);
+  assert.deepEqual(selected.followUp.selection.priorities, ['untriaged']);
+  assert.deepEqual(
+    selected.followUp.actions.map((a) => a.id),
+    ['validate-boundary'],
+  );
+  assert.deepEqual(
+    selected.findings.map((f) => f.id),
+    ['boundary-risk'],
+  );
+  const archive = join(await realpath(root), 'portable archive');
+  const exported = await promisify(execFile)(
+    process.execPath,
+    [
+      join(installed, 'scripts/run.mjs'),
+      'export',
+      ...args,
+      '--out',
+      archive,
+      '--priority',
+      'untriaged',
+    ],
+    { cwd: root },
+  );
+  const receipt = JSON.parse(exported.stdout);
+  assert.equal(receipt.runId, fixture.run.id);
+  assert.equal(receipt.directory, archive);
+  assert.equal(receipt.portable, true);
+  assert.equal(receipt.verified, true);
+  const publication = JSON.parse(await readFile(join(archive, 'outputs.json'), 'utf8'));
+  assert.equal(publication.schemaVersion, 1);
+  assert.equal(publication.runId, fixture.run.id);
+  assert.deepEqual(
+    publication.evidence.map((e) => e.path),
+    [proof],
+  );
+  assert.equal(
+    publication.evidence[0].sha256,
+    createHash('sha256').update('synthetic copied-runtime evidence\n').digest('hex'),
+  );
   const cleaned = await promisify(execFile)(
     paths.closing.cleanup.executable,
     paths.closing.cleanup.args,
@@ -80,6 +127,19 @@ test('standalone Codex skill keeps its runner after copying only the complete ge
   assert.equal(JSON.parse(cleaned.stdout).verified, true);
   await assert.rejects(access(fixture.run.workspace));
   await access(paths.implementationPlanPath);
+  const moved = join(await realpath(root), 'moved portable archive');
+  await rename(archive, moved);
+  await rename(fixture.run.directory, fixture.run.directory + '-hidden');
+  const { verifyPortableBundle } = await import(
+    pathToFileURL(join(installed, 'scripts/runner/src/outputs.mjs')).href
+  );
+  const verified = await verifyPortableBundle(moved, fixture.run.id);
+  assert.deepEqual(verified.evidenceRefs, [proof]);
+  assert.equal(await readFile(join(moved, proof), 'utf8'), 'synthetic copied-runtime evidence\n');
+  assert.match(
+    await readFile(join(moved, 'agent-prompt.md'), 'utf8'),
+    /Plan: implementation-plan\.md/,
+  );
 });
 test('Claude bundle carries a self-contained catalog whose root skill runner works', async (t) => {
   const root = await temp(t),
