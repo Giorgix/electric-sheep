@@ -6,6 +6,9 @@ import { tmpdir } from 'node:os';
 import { createRepo } from './helpers/repos.mjs';
 import { cli } from './helpers/cli.mjs';
 import { loadRun } from '../src/store.mjs';
+import { findingInput, followUpInput } from './helpers/follow-up.mjs';
+import { protocolFixture } from './helpers/protocol.mjs';
+import { verifyOutputBundle } from '../src/outputs.mjs';
 const example = join(import.meta.dirname, '../examples/checkout');
 const acceptance = [
   `import assert from 'node:assert/strict'; import {totalItems,total} from './checkout.mjs'; assert.equal(total({price:12.5}),12.5); assert.equal(totalItems([{price:2},{price:3}]),5); assert.throws(()=>totalItems([])); for(const price of [-1,NaN,Infinity]) assert.throws(()=>totalItems([{price}]));`,
@@ -70,7 +73,10 @@ test('known empty-cart omission is demonstrated without altering source', async 
   const report = JSON.parse(await readFile(jsonPath, 'utf8'));
   assert.equal(report.challenges[0].outcome, 'failed');
   assert.equal(report.challenges[1].outcome, 'not-run');
-  assert.equal((await invoke('cleanup', '--confirm', id)).exitCode, 0);
+  const receipt = JSON.parse((await invoke('cleanup', '--confirm', id)).stdout);
+  assert.equal(receipt.verified, true);
+  assert.equal(receipt.outcome, 'failed');
+  await verifyOutputBundle(await loadRun(root, id));
   await assert.rejects(access(run.workspace));
   await access(jsonPath);
   assert.deepEqual(await repo.snapshot(), original);
@@ -85,11 +91,71 @@ test('three realistic cumulative requirements complete and preserve source', asy
     const result = await invoke('evaluate');
     assert.equal(result.exitCode, 0, result.stderr);
   }
-  const paths = JSON.parse((await invoke('report')).stdout);
+  const completed = await loadRun(root, id);
+  const structural = {
+    ...findingInput('structure'),
+    category: 'evolution-friction',
+    origin: 'experimental',
+    evidenceRefs: [completed.events.find((e) => e.type === 'checkpoint').diffPath],
+  };
+  const findingFile = join(root, 'finding.json');
+  for (const finding of [findingInput(), structural]) {
+    await writeFile(findingFile, JSON.stringify(finding));
+    assert.equal((await invoke('finding', '--file', findingFile)).exitCode, 0);
+  }
+  const followUp = followUpInput();
+  followUp.actions.push({
+    ...structuredClone(followUp.actions[0]),
+    id: 'structure',
+    findingIds: ['structure'],
+    dependsOn: ['boundary'],
+  });
+  const followUpFile = join(root, 'follow-up.json');
+  await writeFile(followUpFile, JSON.stringify(followUp));
+  const generated = await invoke('report', '--follow-up', followUpFile);
+  assert.equal(generated.exitCode, 0, generated.stderr);
+  const paths = JSON.parse(generated.stdout);
+  await access(run.workspace); // Report/keep choice has no deletion side effect.
+  assert.deepEqual(paths.closing.choices, ['remove-worktree', 'keep-worktree']);
   const report = JSON.parse(await readFile(paths.jsonPath, 'utf8'));
+  assert.equal(report.schemaVersion, 1);
+  assert.deepEqual(
+    report.followUp.actions.map((a) => a.id),
+    ['boundary', 'structure'],
+  );
   assert.equal(report.status, 'completed');
   assert.equal(report.challenges.filter((c) => c.outcome === 'passed').length, 3);
-  assert.equal((await invoke('cleanup', '--confirm', id)).exitCode, 0);
+  const cleaned = await invoke('cleanup', '--confirm', id);
+  assert.equal(cleaned.exitCode, 0, cleaned.stderr);
+  assert.equal(JSON.parse(cleaned.stdout).verified, true);
+  const later = await invoke('report');
+  assert.equal(later.exitCode, 0, later.stderr);
+  const after = JSON.parse(await readFile(paths.jsonPath, 'utf8'));
+  assert.deepEqual(after.followUp.actions, report.followUp.actions);
+  await verifyOutputBundle(await loadRun(root, id));
   assert.deepEqual(await repo.snapshot(), original);
   await access(paths.markdownPath);
+  await access(paths.agentPromptPath);
+});
+test('blocked baseline still publishes honest follow-up and confirmed closing', async (t) => {
+  const { run, root, repo } = await protocolFixture(t, {
+    files: { 'value.mjs': 'export const value=-1;' },
+  });
+  const before = await repo.snapshot();
+  const invoke = (verb, ...args) => cli([verb, '--run', run.id, '--runs-root', root, ...args]);
+  assert.equal((await invoke('baseline')).exitCode, 1);
+  const generated = await invoke('report');
+  assert.equal(generated.exitCode, 0, generated.stderr);
+  const paths = JSON.parse(generated.stdout);
+  await access(run.workspace);
+  const report = JSON.parse(await readFile(paths.jsonPath, 'utf8'));
+  assert.equal(report.status, 'blocked');
+  assert.deepEqual(report.followUp.actions, []);
+  assert.match(await readFile(paths.implementationPlanPath, 'utf8'), /blocked baseline/i);
+  assert.equal(paths.closing.requiresConfirmation, true);
+  const removed = await invoke('cleanup', '--confirm', run.id);
+  assert.equal(removed.exitCode, 0, removed.stderr);
+  assert.equal(JSON.parse(removed.stdout).outcome, 'blocked');
+  await verifyOutputBundle(await loadRun(root, run.id));
+  assert.deepEqual(await repo.snapshot(), before);
 });

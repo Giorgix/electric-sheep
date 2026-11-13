@@ -1,6 +1,6 @@
 # Electric Sheep: actionable follow-up and verified session closing
 
-Status: option B and the closing flow approved by the user; implementation details below are assistant design calls for plan review.
+Status: option B, closing flow, implementation plan, and native execution approved by the user. Technical implementation details below originated as assistant design calls.
 Date: 2026-11-13
 Base: merged PR #3, `c776b937cbf0c26e1c9b66a343f5dbf04daebff0`.
 

@@ -8,6 +8,18 @@ This is a local preview, not a claim of universal reliability or production read
 - Claude Code 2.1.302 is available. CLI help confirms `--plugin-dir` and `plugin validate --strict --json`.
 - Codex is not on PATH.
 
+## Electric Sheep 0.3.0 follow-up and closing verification (2026-11-13)
+
+- Initial complete implementation suite: **150/150** passing on the inspected Windows/Node 22 environment. New tests exercise authored follow-up validation, stable dependency order, priority/provenance and hypothesis/applicability gates; saved input reuse; five deliverables plus hash manifest; missing/tampered/symlinked output/evidence; and legacy/partial/cleaned reporting.
+- Real temporary Git worktrees exercise output-before-deletion, final tracked/new/binary diff replay, ignored-secret exclusion, explicit consent, outside-worktree cwd, pending command recovery, locked removal/retry, original outcome preservation, missing source/registration, foreign replacement paths, repeat cleanup, and explicit full-evidence deletion. Source checkout snapshots remain unchanged.
+- Reproduced a real Windows Git behavior: `worktree remove --force` can unregister a worktree but leave a junction entry/directory behind. Previous cleanup silently marked it cleaned. The regression now checks both workspace absence and unchanged source; only the previously validated owned residue is removed without following junction targets.
+- Simulated-host CLI scenarios cover three-round success with mixed authored findings, terminal failure, and a blocked baseline. They verify a usable package/cleanup choice before deletion and persisted follow-up after report regeneration. These are deterministic host edits, **not model-driven sessions**.
+- Both host bundles import the complete runner. The generated Codex skill is copied away from its bundle, the original bundle is removed, then its own runner consumes the bundled follow-up example, publishes reports, and executes verified cleanup from unrelated spaced/Unicode fixture paths. This is portable-runtime delivery, not a live Codex host test.
+- `npm run check`, `npm run format:check`, `npm pack --dry-run`, and `git diff --check` passed. Release identities are aligned to **0.3.0**; run/plan schema remains **1**. Existing evidence directories are not migrated or deleted.
+- No dependency installation, model calls, changes to real client settings, or cleanup of user run data was performed. Local tests are not claims of current-release Linux/macOS/Node 24 success; consult the feature PR's actual CI checks.
+- Canonical closing instructions changed, but no fresh-context model tool was available for pressure/no-guidance-control scenarios. CLI consent/output/postconditions and executable reference data are tested; whether Claude/Codex/Pi/OpenCode/ChatGPT reliably presents and follows the closing conversation remains **unverified**. Hashes record artifact completeness/integrity, not the truth of agent judgments or security confinement.
+- Review is author self-review, not independent assurance. Persistent GitHub installation and future-version client upgrade behavior were not re-tested for this release.
+
 ## Multi-client README verification (2026-11-13)
 
 This documentation-only follow-up adds installation recipes, not new runtime integrations or universal support guarantees.
