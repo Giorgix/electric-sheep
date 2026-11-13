@@ -139,7 +139,7 @@
 - [x] **Step 2: Run RED.** `node --test tests/e2e.test.mjs tests/packaging.test.mjs tests/distribution.test.mjs`; new metadata assertions must fail before release values change.
 - [x] **Step 3: Align release metadata.** Update package/lock root versions and both plugin manifests/catalog entry to `0.3.0`. Retain historical verification claims and add current evidence/limitations only after executing checks. Resolve reproduced integration failures with failing regressions, not speculative refactoring.
 - [x] **Step 4: Final verification and author review.** Run `npm test`, `npm run check`, `npm run format:check`, `npm pack --dry-run`, `git diff --check`, and `claude plugin validate --strict --json .`. Verify both complete bundles and copied standalone runtime. Read the whole diff against the spec, explicitly inspect all five Review Focus cases, and record that no independent reviewer/model exercise was available. Do not install dependencies or invoke paid models to satisfy a verification claim.
-- [ ] **Step 5: Commit and delivery.** Commit `feat: release actionable output and verified closing as 0.3.0`. Push only the feature branch; open a PR against `main`, report actual checks/remaining host limitations, preserve this worktree for feedback, and leave the PR unmerged.
+- [x] **Step 5: Commit and delivery.** PR: https://github.com/Giorgix/electric-sheep/pull/4 (left unmerged; development worktree retained). Commit `feat: release actionable output and verified closing as 0.3.0`. Push only the feature branch; open a PR against `main`, report actual checks/remaining host limitations, preserve this worktree for feedback, and leave the PR unmerged.
 
 ## Plan self-review and execution handoff
 
