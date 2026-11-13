@@ -27,9 +27,55 @@ Install for the **application you run**, not the model you select. For example, 
 | [OpenCode](#opencode-native-agent-skill) | Complete standalone skill in `~/.config/opencode/skills/` | `@evolution-stress-test TARGET` on current versions | Documentation-based recipe; live host unverified |
 | [Other Agent Skills clients](#other-agent-skills-clients) | Manual complete-skill installation | Client-specific | Not individually verified |
 
-Replace `TARGET` with a feature or module, such as `the checkout module`. After installation, start your coding tool **in the clean target project**. The agent must propose three challenges and concrete commands for your approval before executing project code. Installing a skill does not authorize a run.
+Replace `TARGET` with a feature or module, such as `the checkout module`. After installation, start your coding tool **in the clean target project**, then [invoke the skill with a plain-language request](#how-to-use-it-three-examples). The agent must propose three challenges and concrete commands for your approval before executing project code. Installing a skill does not authorize a run.
 
 **These are preview integrations, not equivalent support claims.** GitHub installation transport and real model-driven exercises have not been verified for every client. See [verification](docs/verification.md) for the evidence and limits.
+
+## How to use it: three examples
+
+After installing, open your coding tool in the repository you want to test and send the skill invocation **as a chat message**, not a terminal command.
+
+**What goes after the skill command?** A plain-language description of what to test, optionally followed by concerns or constraints:
+
+```text
+<your tool's skill invocation> [feature, module, or path to test] [optional concerns and constraints]
+```
+
+The brackets above explain the shape; do not type them literally. There is **no required `--scope` flag, special argument format, or JSON plan for you to write**. The agent turns your request into a bounded scope and a proposed exercise. A scope can be a module name, a repository-relative path, or a reference to work already discussed. You do not need extra instructions beyond a clear target; the skill already defines the workflow.
+
+### 1. Simple request in Pi
+
+```text
+/skill:evolution-stress-test the checkout module
+```
+
+That's enough to start. The agent reads the relevant code and requirements, then proposes three cumulative changes and the exact commands it wants to run. It must wait for approval before executing project code.
+
+### 2. Specific path, concerns, and constraints in Claude Code
+
+```text
+/electric-sheep:evolution-stress-test src/imports. Focus on malformed CSV rows and partial failures. Keep the public API compatible and do not add dependencies. Propose the exercise and commands first; wait for my approval before executing project code.
+```
+
+Replace `src/imports` with a real path in your repository. Everything after the skill name is ordinary prompt text: the first part identifies the target, and the rest gives optional guidance. You can also send those constraints in a follow-up message before approving the exercise.
+
+### 3. Use the existing conversation context in Codex
+
+After discussing or implementing a feature in the same chat (commit any intended source changes first; the target checkout must be clean):
+
+```text
+$evolution-stress-test the retry logic we just added. Focus on duplicate requests and exhausted retries. Propose the exercise only for now.
+```
+
+You do **not** have to repeat a directory if the conversation already identifies the target. Invoking the skill without any extra text is also possible when the target is unambiguous; otherwise, the agent should ask what to test rather than guess. For OpenCode or ChatGPT desktop, use that client's invocation from the table above with the same kind of plain-language request.
+
+### What happens next?
+
+1. **Proposal:** the agent identifies the target and proposes exactly three cumulative challenges, acceptance checks, and concrete commands. Read the proposal; narrow the scope or change constraints in chat if needed.
+2. **Your approval:** when satisfied, reply with something like: `I approve the three challenges and the exact commands you listed. Run the exercise in the disposable worktree. Do not install dependencies or apply experimental changes back to my source checkout.` This approves the listed exercise, not arbitrary future commands. Dependency installation needs separate explicit approval.
+3. **Execution and report:** the agent uses the runner to establish the baseline, implement and check the challenges in the disposable worktree, and produce an evidence-backed report. Useful fixes and worktree cleanup are offered separately; nothing is automatically merged back.
+
+You do not need to invoke the skill again for each challenge. A **proposal-only** request stops before project execution; you can review it and approve the listed exercise later in the same conversation. These examples describe the intended workflow, not additional live-model validation.
 
 ## Claude Code: persistent GitHub installation
 
