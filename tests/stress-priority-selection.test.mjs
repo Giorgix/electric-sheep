@@ -17,8 +17,13 @@ async function fixture(t) {
   const input = { schemaVersion: 1, actions: [] };
   for (const priority of ['high', 'medium', 'low']) {
     await addFinding(f.run, { ...findingInput(priority), evidenceRefs: [proof] });
-    input.actions.push({ ...followUpInput(priority).actions[0], id: priority,
-      title: `Action ${priority} only`, priority, dependsOn: [] });
+    input.actions.push({
+      ...followUpInput(priority).actions[0],
+      id: priority,
+      title: `Action ${priority} only`,
+      priority,
+      dependsOn: [],
+    });
   }
   const file = join(f.root, 'authored.json');
   await writeFile(file, JSON.stringify(input));
@@ -39,8 +44,14 @@ test('priority view selects high actions while preserving findings saved input e
   const f = await fixture(t);
   const { paths, report } = await result(f, '--priority', 'high');
   assert.equal(report.schemaVersion, 1);
-  assert.deepEqual(report.followUp.actions.map(a => a.id), ['high']);
-  assert.deepEqual(report.findings.map(a => a.id), ['high', 'medium', 'low']);
+  assert.deepEqual(
+    report.followUp.actions.map((a) => a.id),
+    ['high'],
+  );
+  assert.deepEqual(
+    report.findings.map((a) => a.id),
+    ['high', 'medium', 'low'],
+  );
   assert.deepEqual(report.followUp.selection.priorities, ['high']);
   assert.deepEqual(report.followUp.actions[0].evidenceRefs, [f.proof]);
   assert.deepEqual(report.followUp.actions[0].origins, ['uncertain']);
@@ -56,14 +67,28 @@ test('priority view selects high actions while preserving findings saved input e
 });
 test('multiple priority options form a deduplicated union in original action order', async (t) => {
   const f = await fixture(t);
-  const { report } = await result(f, '--priority', 'low', '--priority', 'high', '--priority', 'high');
-  assert.deepEqual(report.followUp.actions.map(a => a.id), ['high', 'low']);
+  const { report } = await result(
+    f,
+    '--priority',
+    'low',
+    '--priority',
+    'high',
+    '--priority',
+    'high',
+  );
+  assert.deepEqual(
+    report.followUp.actions.map((a) => a.id),
+    ['high', 'low'],
+  );
 });
 test('omitting priority after a selected view restores all actions without losing authored data', async (t) => {
   const f = await fixture(t);
   await result(f, '--priority', 'high');
   const { report } = await result(f);
-  assert.deepEqual(report.followUp.actions.map(a => a.id), ['high', 'medium', 'low']);
+  assert.deepEqual(
+    report.followUp.actions.map((a) => a.id),
+    ['high', 'medium', 'low'],
+  );
   assert.equal(report.followUp.source, 'host-agent');
 });
 test('empty selection is disclosed without pretending there were no findings', async (t) => {

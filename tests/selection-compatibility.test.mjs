@@ -12,19 +12,30 @@ for (const priority of ['untriaged', 'high'])
   test(`template selection preserves untriaged provenance and saved data (${priority})`, async (t) => {
     const f = await protocolFixture(t);
     await addFinding(f.run, findingInput());
-    const result = await cli(['report', '--run', f.run.id, '--runs-root', f.root, '--priority', priority]);
+    const result = await cli([
+      'report',
+      '--run',
+      f.run.id,
+      '--runs-root',
+      f.root,
+      '--priority',
+      priority,
+    ]);
     assert.equal(result.exitCode, 0, result.stderr);
     const report = JSON.parse(await readFile(JSON.parse(result.stdout).jsonPath, 'utf8'));
     assert.equal(report.followUp.source, 'runner-template');
     assert.deepEqual(report.followUp.selection.priorities, [priority]);
-    assert.deepEqual(report.findings.map(v => v.id), ['risk']);
+    assert.deepEqual(
+      report.findings.map((v) => v.id),
+      ['risk'],
+    );
     if (priority === 'untriaged') {
       assert.equal(report.followUp.actions.length, 1);
       assert.equal(report.followUp.actions[0].priority, 'untriaged');
       assert.deepEqual(report.followUp.actions[0].findingIds, ['risk']);
     } else {
       assert.deepEqual(report.followUp.actions, []);
-      assert.ok(!report.followUp.notes.some(s => /no agent findings recorded/i.test(s)));
+      assert.ok(!report.followUp.notes.some((s) => /no agent findings recorded/i.test(s)));
     }
     const saved = await loadRun(f.root, f.run.id);
     assert.equal(saved.followUp, undefined);
@@ -32,7 +43,15 @@ for (const priority of ['untriaged', 'high'])
   });
 test('selection without findings does not invent tasks', async (t) => {
   const f = await protocolFixture(t);
-  const result = await cli(['report', '--run', f.run.id, '--runs-root', f.root, '--priority', 'high']);
+  const result = await cli([
+    'report',
+    '--run',
+    f.run.id,
+    '--runs-root',
+    f.root,
+    '--priority',
+    'high',
+  ]);
   assert.equal(result.exitCode, 0, result.stderr);
   const report = JSON.parse(await readFile(JSON.parse(result.stdout).jsonPath, 'utf8'));
   assert.deepEqual(report.findings, []);

@@ -158,9 +158,13 @@ export function selectFollowUp(followUp, priorities) {
   view.selection = { priorities: selected, dependencyIds };
   view.notes.push(`Selected priorities: ${selected.join(', ')}`);
   for (const id of dependencyIds)
-    view.notes.push(`Prerequisite ${id} included for ${[...requiredBy.get(id)].join(', ')} despite its priority.`);
+    view.notes.push(
+      `Prerequisite ${id} included for ${[...requiredBy.get(id)].join(', ')} despite its priority.`,
+    );
   if (!view.actions.length)
-    view.notes.push('No actions match the selected priorities; findings remain in the complete report.');
+    view.notes.push(
+      'No actions match the selected priorities; findings remain in the complete report.',
+    );
   return view;
 }
 function header(report, title) {

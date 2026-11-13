@@ -246,6 +246,25 @@ function markdown(report) {
   );
   return lines.join('\n');
 }
+export function evidenceReferences(run) {
+  const artifacts = [...run.protectedArtifacts, ...run.rounds.flatMap((r) => r.protectedArtifacts)];
+  return [
+    ...run.findings.flatMap((f) => f.evidenceRefs),
+    ...run.commandResults.flatMap((r) => [r.stdoutPath, r.stderrPath]),
+    ...run.events.map((e) => e.diffPath),
+    ...run.deltas.map((d) => d.evidenceRef),
+    ...artifacts.map((a) => a.evidencePath),
+  ].filter(Boolean);
+}
+export function reportContents(report, context) {
+  return {
+    'report.json': JSON.stringify(report, null, 2) + '\n',
+    'report.md': markdown(report),
+    'next-actions.md': renderNextActions(report),
+    'implementation-plan.md': renderImplementationPlan(report),
+    'agent-prompt.md': renderAgentPrompt(report, context),
+  };
+}
 export async function writeReports(run, { followUp, priorities } = {}) {
   const selected = validatePriorities(priorities);
   if (followUp !== undefined) {
@@ -254,27 +273,10 @@ export async function writeReports(run, { followUp, priorities } = {}) {
     await saveRun(run);
   }
   const report = await buildReport(run, { priorities: selected });
-  const artifacts = [...run.protectedArtifacts, ...run.rounds.flatMap((r) => r.protectedArtifacts)];
-  const evidenceRefs = [
-    ...run.findings.flatMap((f) => f.evidenceRefs),
-    ...run.commandResults.flatMap((r) => [r.stdoutPath, r.stderrPath]),
-    ...run.events.map((e) => e.diffPath),
-    ...run.deltas.map((d) => d.evidenceRef),
-    ...artifacts.map((a) => a.evidencePath),
-  ].filter(Boolean);
   const paths = await writeOutputBundle(
     run,
-    {
-      'report.json': JSON.stringify(report, null, 2) + '\n',
-      'report.md': markdown(report),
-      'next-actions.md': renderNextActions(report),
-      'implementation-plan.md': renderImplementationPlan(report),
-      'agent-prompt.md': renderAgentPrompt(report, {
-        directory: run.directory,
-        ...outputPaths(run),
-      }),
-    },
-    evidenceRefs,
+    reportContents(report, { directory: run.directory, ...outputPaths(run) }),
+    evidenceReferences(run),
   );
   return { ...paths, closing: describeClosing(run, paths) };
 }

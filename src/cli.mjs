@@ -7,6 +7,7 @@ import { inspectRepository } from './repository.mjs';
 import { createRun, loadRun, withRunLock, recoverLock } from './store.mjs';
 import { createWorkspace } from './workspace.mjs';
 import { finalizeCleanup } from './closing.mjs';
+import { exportReport } from './export.mjs';
 import { validateFollowUp, validatePriorities } from './follow-up.mjs';
 import {
   runBaseline,
@@ -24,6 +25,7 @@ Usage: electric-sheep <verb> [options]
   start --repo PATH --plan FILE --approval-note TEXT
   baseline|freeze|evaluate|status|resume --run ID
   report --run ID [--follow-up FILE] [--priority VALUE ...]
+  export --run ID --out DIRECTORY [--priority VALUE ...] (existing physical parent required)
   amend --run ID --plan FILE --approval-note TEXT
   finding --run ID --file FILE
   recover-lock --run ID --approval-note TEXT
@@ -41,6 +43,7 @@ const flags = {
   evaluate: ['run'],
   status: ['run'],
   report: ['run', 'follow-up', 'priority'],
+  export: ['run', 'out', 'priority'],
   resume: ['run'],
   amend: ['run', 'plan', 'approval-note'],
   finding: ['run', 'file'],
@@ -132,8 +135,11 @@ export async function main(argv, { stdout = process.stdout, stderr = process.std
             return cancelRun(run, values.note);
           case 'report': {
             let priorities;
-            try { priorities = validatePriorities(values.priority); }
-            catch (error) { throw new UsageError(error.message); }
+            try {
+              priorities = validatePriorities(values.priority);
+            } catch (error) {
+              throw new UsageError(error.message);
+            }
             let followUp;
             if (values['follow-up'] !== undefined) {
               try {
@@ -146,6 +152,15 @@ export async function main(argv, { stdout = process.stdout, stderr = process.std
             }
             await collectDeltas(run);
             return writeReports(run, { followUp, priorities });
+          }
+          case 'export': {
+            let priorities;
+            try {
+              priorities = validatePriorities(values.priority);
+            } catch (error) {
+              throw new UsageError(error.message);
+            }
+            return exportReport(run, { out: values.out, priorities });
           }
           case 'cleanup':
             return finalizeCleanup(run, { deleteEvidence: values['delete-evidence'] ?? false });

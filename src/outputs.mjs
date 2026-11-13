@@ -22,12 +22,17 @@ export function outputPaths(run) {
 async function own(run) {
   const owner = await ownedDirectory(run.directory, run.id);
   if (owner.repository !== run.repository.root) throw new Error('Invalid output ownership');
-  const evidence = join(run.directory, 'evidence');
+  await bundleDirectory(run.directory);
+}
+async function bundleDirectory(directory) {
+  const root = await lstat(directory);
+  if (root.isSymbolicLink() || !root.isDirectory()) throw new Error('Invalid bundle directory');
+  const evidence = join(directory, 'evidence');
   const info = await lstat(evidence);
   if (
     info.isSymbolicLink() ||
     !info.isDirectory() ||
-    !contained(run.directory, await realpath(evidence))
+    !contained(await realpath(directory), await realpath(evidence))
   )
     throw new Error('Invalid evidence directory or symlink');
 }
@@ -47,6 +52,9 @@ async function evidenceFile(run, ref) {
   if (!contained(await realpath(join(run.directory, 'evidence')), await realpath(path)))
     throw new Error('Escaping evidence reference');
   return path;
+}
+export async function readEvidence(run, ref) {
+  return readFile(await evidenceFile(run, ref));
 }
 async function atomic(path, content) {
   await regular(path, true);
@@ -91,6 +99,11 @@ export async function writeOutputBundle(run, contents, evidenceRefs) {
 }
 export async function verifyOutputBundle(run) {
   await own(run);
+  return verifyPortableBundle(run.directory, run.id);
+}
+export async function verifyPortableBundle(directory, expectedRunId) {
+  await bundleDirectory(directory);
+  const run = { directory };
   const paths = outputPaths(run);
   await regular(paths.outputManifestPath);
   const manifest = JSON.parse(await readFile(paths.outputManifestPath, 'utf8'));
@@ -99,7 +112,8 @@ export async function verifyOutputBundle(run) {
     .sort();
   if (
     manifest.schemaVersion !== 1 ||
-    manifest.runId !== run.id ||
+    typeof manifest.runId !== 'string' ||
+    (expectedRunId !== undefined && manifest.runId !== expectedRunId) ||
     !/^[0-9a-f-]{36}$/i.test(manifest.generationId) ||
     !Array.isArray(manifest.files) ||
     !Array.isArray(manifest.evidence) ||
