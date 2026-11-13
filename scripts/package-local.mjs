@@ -57,6 +57,7 @@ export async function packageLocal({ host, out }) {
       'examples',
       `.${host}-plugin/plugin.json`,
     ];
+    if (host === 'claude') paths.push('.claude-plugin/marketplace.json');
     for (const path of paths) await copyPlain(join(source, path), join(stage, path));
     if (host === 'codex') {
       const embedded = join(stage, 'skills/evolution-stress-test/scripts/runner');

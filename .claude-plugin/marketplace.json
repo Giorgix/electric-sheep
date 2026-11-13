@@ -1,0 +1,18 @@
+{
+  "name": "electric-sheep",
+  "owner": {
+    "name": "Giorgix"
+  },
+  "metadata": {
+    "description": "Electric Sheep evolution stress testing for coding agents"
+  },
+  "plugins": [
+    {
+      "name": "electric-sheep",
+      "description": "Evidence-driven evolution stress tests in isolated Git worktrees",
+      "version": "0.2.0",
+      "source": "./",
+      "strict": true
+    }
+  ]
+}

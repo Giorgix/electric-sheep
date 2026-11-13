@@ -2,6 +2,18 @@
 
 Run `node /absolute/path/to/electric-sheep/bin/electric-sheep.mjs --help`, or use the plugin's skill-relative `scripts/run.mjs`. No runtime install/build is needed. Node 22+ and Git must already exist.
 
+## Persistent Claude installation
+
+Inside Claude Code, run `/plugin marketplace add Giorgix/electric-sheep`, then `/plugin install electric-sheep@electric-sheep`. The shell shortcut on current Claude versions is:
+
+```bash
+claude plugin install electric-sheep --marketplace Giorgix/electric-sheep
+```
+
+This uses the repository's self-hosted catalog and defaults to user scope. Start a fresh Claude session in your target project and invoke `/electric-sheep:evolution-stress-test TARGET`; no `--plugin-dir` is needed after installation. Refresh with `claude plugin marketplace update electric-sheep`, update with `claude plugin update electric-sheep@electric-sheep`, and restart Claude. Uninstall with `claude plugin uninstall electric-sheep@electric-sheep`; experimental worktrees/evidence require the runner's separate explicit cleanup.
+
+Use a real terminal for interactive Claude. A tool-run process with captured stdout may enter print mode; give `claude --print` an explicit prompt for a noninteractive response. Print mode is not the exercise's approval conversation and should be used only in a trusted project. See the [installation walkthrough](../README.md#claude-code-persistent-github-installation).
+
 ## Commands
 
 All commands accept `--runs-root PATH`, defaulting to `~/.electric-sheep/runs`. Keep this outside the source repository. Successful operational output is JSON; diagnostics use stderr. Exit codes: 0 successful operation/checks; 1 blocked, failed, invalid, interrupted exercise or operational failure; 2 usage/JSON input error. A first failed evaluation returns 1 even though one repair remains. `freeze` may return 0 with an expected failing pre-implementation check: that is not an implementation pass.
@@ -82,4 +94,4 @@ node scripts/package-local.mjs --host codex --out ../electric-sheep-codex
 
 Use fresh output directories outside the source tree. Packaging copies an allowlist, not repository history/settings/tests/credentials. Claude Code: `claude --plugin-dir /absolute/path/to/bundle`; use `/electric-sheep:evolution-stress-test TARGET`. Codex: copy the generated complete skill into an unused `~/.agents/skills/evolution-stress-test`, restart if necessary, invoke `$evolution-stress-test TARGET`. On PowerShell, `Copy-Item -Recurse "<bundle>/skills/evolution-stress-test" "$HOME/.agents/skills/evolution-stress-test"` after creating the parent. Do not overwrite an existing skill without reviewing it.
 
-The Codex generated skill has an embedded runtime so a standalone copy works without symlinks or guessing a sibling installation path. Do not copy only the source `SKILL.md`. Marketplace submission and live host compatibility are not implied; consult [verification](verification.md).
+The Codex generated skill has an embedded runtime so a standalone copy works without symlinks or guessing a sibling installation path. Do not copy only the source `SKILL.md`. The Claude bundle also contains the self-hosted marketplace catalog; official marketplace submission and live model behavior are not implied. Native Codex marketplace installation is not claimed; consult [verification](verification.md).

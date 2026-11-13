@@ -53,6 +53,29 @@ test('standalone Codex skill keeps its runner after copying only the complete ge
   );
   assert.match(result.stdout, /Electric Sheep/);
 });
+test('Claude bundle carries a self-contained catalog whose root skill runner works', async (t) => {
+  const root = await temp(t),
+    out = join(root, 'catalog-bundle');
+  await packageLocal({ host: 'claude', out });
+  const catalog = JSON.parse(await readFile(join(out, '.claude-plugin/marketplace.json'), 'utf8'));
+  assert.deepEqual(
+    catalog,
+    JSON.parse(await readFile(join(source, '.claude-plugin/marketplace.json'), 'utf8')),
+  );
+  assert.equal(catalog.plugins[0].source, './');
+  const pluginRoot = join(out, catalog.plugins[0].source);
+  const manifest = JSON.parse(
+    await readFile(join(pluginRoot, '.claude-plugin/plugin.json'), 'utf8'),
+  );
+  assert.equal(manifest.name, 'electric-sheep');
+  assert.equal(manifest.version, catalog.plugins[0].version);
+  const { stdout } = await promisify(execFile)(
+    process.execPath,
+    [join(pluginRoot, 'skills/evolution-stress-test/scripts/run.mjs'), '--help'],
+    { cwd: root },
+  );
+  assert.match(stdout, /Electric Sheep/);
+});
 test('unsafe output locations and unknown hosts are rejected without overwrite', async (t) => {
   await assert.rejects(
     packageLocal({ host: 'claude', out: join(source, 'bad-bundle') }),

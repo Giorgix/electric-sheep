@@ -87,3 +87,25 @@ test('default storage uses the new home directory while explicit schema-1 runs s
     ]);
   }
 });
+
+// Catch an install name that cannot resolve to the shipped root plugin.
+test('marketplace exposes the renamed root plugin with matching release metadata', async () => {
+  const catalog = await json('.claude-plugin/marketplace.json');
+  assert.equal(catalog.name, 'electric-sheep');
+  assert.equal(catalog.owner.name, 'Giorgix');
+  assert.equal(catalog.plugins.length, 1);
+  const entry = catalog.plugins[0];
+  assert.equal(entry.name, 'electric-sheep');
+  assert.equal(entry.source, './');
+  assert.equal(entry.version, '0.2.0');
+  assert.equal(entry.strict, true);
+  const manifest = await json(join(entry.source, '.claude-plugin/plugin.json'));
+  assert.equal(entry.name, manifest.name);
+  assert.equal(entry.version, manifest.version);
+  const { stdout } = await exec(
+    process.execPath,
+    [join(source, entry.source, 'skills/evolution-stress-test/scripts/run.mjs'), '--help'],
+    { cwd: tmpdir() },
+  );
+  assert.match(stdout, /Electric Sheep/);
+});
