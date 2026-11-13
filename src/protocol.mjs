@@ -215,8 +215,8 @@ export async function cancelRun(run, note) {
   return stop(run, 'cancelled', note);
 }
 export async function validateResume(run) {
-  if (terminal.has(run.phase)) return run;
   await interruptPending(run);
+  if (terminal.has(run.phase)) return run;
   if (!(await checkIntegrity(run))) return run;
   if (run.phase === 'challenge' && run.attempts >= 2) {
     run.rounds[run.currentIndex].status = 'failed';
