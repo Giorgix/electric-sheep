@@ -1,6 +1,6 @@
 # Electric Sheep: persistent GitHub installation and consistent naming
 
-Status: user-approved design and implementation plan; native execution in progress.
+Status: user-approved design and implementation plan; implemented natively and prepared for human PR review. GitHub/main installation awaits merge.
 
 ## Intent and scope
 
