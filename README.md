@@ -73,9 +73,49 @@ You do **not** have to repeat a directory if the conversation already identifies
 
 1. **Proposal:** the agent identifies the target and proposes exactly three cumulative challenges, acceptance checks, and concrete commands. Read the proposal; narrow the scope or change constraints in chat if needed.
 2. **Your approval:** when satisfied, reply with something like: `I approve the three challenges and the exact commands you listed. Run the exercise in the disposable worktree. Do not install dependencies or apply experimental changes back to my source checkout.` This approves the listed exercise, not arbitrary future commands. Dependency installation needs separate explicit approval.
-3. **Execution and report:** the agent uses the runner to establish the baseline, implement and check the challenges in the disposable worktree, and produce an evidence-backed report. Useful fixes and worktree cleanup are offered separately; nothing is automatically merged back.
+3. **Execution and output:** the agent uses the runner to establish the baseline, implement and check the challenges in the disposable worktree, and publish a verified report, recommended next actions, implementation plan, and agent handoff prompt. It then explicitly offers to **keep or remove the experimental worktree**. Removal needs your confirmation and preserves the output/evidence; nothing is automatically merged back.
 
 You do not need to invoke the skill again for each challenge. A **proposal-only** request stops before project execution; you can review it and approve the listed exercise later in the same conversation. These examples describe the intended workflow, not additional live-model validation.
+
+## Output, next actions, and cleanup
+
+At the end of a completed **or stopped** exercise, the agent shows the outcome and the absolute paths to a retained package, normally under `~/.electric-sheep/runs/<run-id>/`:
+
+| File | What you use it for |
+| --- | --- |
+| `report.md` / `report.json` | Read the diagnosis, recorded checks, findings, and limitations |
+| `next-actions.md` | Review prioritized actions, rationale, provenance, and evidence |
+| `implementation-plan.md` | Review ordered tasks, dependencies, target paths, steps, and acceptance criteria |
+| `agent-prompt.md` | Give another coding agent the retained context and safe implementation procedure |
+| `outputs.json` | Verify hashes and completeness of the package and its referenced evidence |
+
+Priorities are agent judgments, not a quality score. Hypotheses need validation; experimental failures are not automatically bugs in your original code. The plan requires applicability and approval checks before adopting changes. If no findings justify implementation, the output says so instead of inventing work. Legacy/partial reports without agent-authored input use an explicitly labeled template draft.
+
+### Example session ending
+
+```text
+Agent: The exercise stopped after challenge 2. The report and follow-up package
+       are saved at <absolute-run-directory>. Review next-actions.md for the
+       recommended investigations and implementation-plan.md for the steps.
+       Remove the experimental worktree while retaining outputs and evidence,
+       or keep it for inspection?
+You:   Remove the experimental worktree, but keep the output and evidence.
+Agent: [Runs confirmed cleanup from outside the worktree.]
+       Cleanup verified: worktree and Git registration removed. Original outcome:
+       failed. Reports, plan, prompt, logs and diffs remain at <absolute-run-directory>.
+```
+
+Choosing **keep**, or not answering, leaves the worktree alone. A cleanup failure must be reported as a failure with recovery guidance—not as successful removal. Ignored files are not copied into evidence; stop concurrent editing/testing before closing. A worktree remains **not a security sandbox**.
+
+To continue in a new AI-agent session, attach or ask the agent to read the actual `agent-prompt.md` file. For example:
+
+```text
+Read /absolute/path/to/runs/<run-id>/agent-prompt.md and its referenced package.
+Review the plan and applicability first. Propose your implementation commands
+for my approval; do not apply the experimental patches automatically.
+```
+
+Replace the example path with the path returned for your run. You do not have to write the plan or JSON yourself; the testing agent prepares it. Follow-up implementation is a separate approved task, not an automatic fourth challenge. The package remains readable after normal cleanup. Uninstalling a plugin does not delete it. See [CLI details](docs/usage.md#findings-and-reports) for manual generation, verification, retry, and the separate destructive evidence-deletion option.
 
 ## Claude Code: persistent GitHub installation
 
@@ -337,7 +377,7 @@ To uninstall a copied Codex/OpenCode/other-client skill, remove only its `evolut
 2. Establish a passing baseline inside an isolated worktree.
 3. Freeze acceptance checks, implement the next requirement, then run new and earlier checks.
 4. Allow one repair attempt per challenge; stop rather than silently weakening tests.
-5. Produce local Markdown and JSON reports. Useful fixes are offered separately; nothing is merged automatically.
+5. Publish the report and actionable follow-up package; explicitly offer keep/remove, and verify confirmed cleanup while retaining evidence. Useful fixes are separate approved work; nothing is merged automatically.
 
 Example pressures: a second business rule, duplicate requests, empty inputs, monetary boundaries, or partial failure. Requirements are proportional to your project, not an excuse to add enterprise infrastructure.
 

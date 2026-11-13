@@ -5,6 +5,10 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
 import { validatePlan } from '../src/contracts.mjs';
+import { validateFollowUp } from '../src/follow-up.mjs';
+import { protocolFixture } from './helpers/protocol.mjs';
+import { addFinding, buildReport } from '../src/report.mjs';
+import { findingInput } from './helpers/follow-up.mjs';
 const skill = join(import.meta.dirname, '../skills/evolution-stress-test');
 test('skill metadata and reference assets are consumable', async () => {
   const text = await readFile(join(skill, 'SKILL.md'), 'utf8');
@@ -25,6 +29,16 @@ test('bundled example plan is accepted by actual runner validation', async () =>
       c.commandIds.every((id) => p.commands.some((command) => command.id === id)),
     ),
   );
+});
+test('bundled follow-up example is accepted against actual recorded findings', async (t) => {
+  const { run } = await protocolFixture(t);
+  await addFinding(run, findingInput('boundary-risk'));
+  const example = JSON.parse(
+    await readFile(join(skill, 'references/follow-up.example.json'), 'utf8'),
+  );
+  const validated = validateFollowUp(example, await buildReport(run));
+  assert.equal(validated.actions[0].findingIds[0], 'boundary-risk');
+  assert.ok(validated.actions[0].acceptanceCriteria.length);
 });
 test('skill runner entry works outside project cwd', async () => {
   const result = await promisify(execFile)(
