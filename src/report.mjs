@@ -14,6 +14,8 @@ import { nonempty, relativePath } from './contracts.mjs';
 import { contained } from './repository.mjs';
 import { runGit } from './git.mjs';
 import { saveRun } from './store.mjs';
+import { evidenceReferences } from './evidence.mjs';
+export { evidenceReferences } from './evidence.mjs';
 
 export async function addFinding(run, input) {
   const finding = structuredClone(input);
@@ -245,16 +247,6 @@ function markdown(report) {
     '',
   );
   return lines.join('\n');
-}
-export function evidenceReferences(run) {
-  const artifacts = [...run.protectedArtifacts, ...run.rounds.flatMap((r) => r.protectedArtifacts)];
-  return [
-    ...run.findings.flatMap((f) => f.evidenceRefs),
-    ...run.commandResults.flatMap((r) => [r.stdoutPath, r.stderrPath]),
-    ...run.events.map((e) => e.diffPath),
-    ...run.deltas.map((d) => d.evidenceRef),
-    ...artifacts.map((a) => a.evidencePath),
-  ].filter(Boolean);
 }
 export function reportContents(report, context) {
   return {

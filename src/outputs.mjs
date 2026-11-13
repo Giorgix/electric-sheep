@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { ownedDirectory, hash } from './store.mjs';
 import { relativePath } from './contracts.mjs';
 import { contained } from './repository.mjs';
+import { evidenceReferences } from './evidence.mjs';
 
 const names = {
   jsonPath: 'report.json',
@@ -137,6 +138,11 @@ export async function verifyPortableBundle(directory, expectedRunId) {
       if (hash(await readFile(path)) !== entry.sha256)
         throw new Error(`Output/evidence integrity mismatch: ${entry.path}`);
     }
+  const report = JSON.parse(await readFile(paths.jsonPath, 'utf8'));
+  if (report.schemaVersion !== 1 || report.id !== manifest.runId)
+    throw new Error('Invalid report identity');
+  for (const ref of evidenceReferences(report))
+    if (!refs.has(ref)) throw new Error(`Unpublished evidence referenced by report: ${ref}`);
   return { generationId: manifest.generationId, paths, evidenceRefs: [...refs] };
 }
 export function describeClosing(run, paths) {
