@@ -22,6 +22,23 @@ A successful report returns absolute paths to `report.md`, `report.json`, `next-
 
 Show the outcome, highest-priority applicable actions, uncertainty, and the absolute package paths. The next agent can use `agent-prompt.md` in a new conversation; the prompt points at retained evidence rather than relying on the worktree or unreachable detached commits. Never claim that an AI-host pressure test happened merely because file checks passed.
 
+## Optional selected view or portable archive
+
+These are opt-in operations after report publication, not extra exercise rounds or automatic sharing:
+
+```text
+node "<absolute-skill-directory>/scripts/run.mjs" report --run ID --priority high --priority medium --runs-root "<runs-root>"
+node "<absolute-skill-directory>/scripts/run.mjs" export --run ID --out "<physical-existing-parent>/<absent-archive-name>" --priority high --runs-root "<runs-root>"
+```
+
+Repeatable `high|medium|low|untriaged` values form a deduplicated union. Validate the whole dependency graph, then include and explain all transitive prerequisites once even if their priorities were not selected. Without the flag, all saved actions return. Empty selection means no matching actions, not no findings; template priorities remain untriaged and hypotheses remain unproven. Selection changes neither saved authored input nor the approved exercise.
+
+Export verifies the existing source publication before copying; corruption must not acquire replacement source hashes. Require an absent destination under an existing canonical/physical parent outside the source repository and runs root. Resolve aliases first (including macOS `/var` to `/private/var` where applicable); existing files/directories and symlink/junction parents are refused. Success returns `portable: true`, `verified: true`, a directory and paths. Move the entire archive: operational links are relative; original repository/command metadata is historical. It is data without an owner marker, not a run to adopt, replay or pass to cleanup.
+
+**Selection is not redaction.** Complete findings and referenced evidence for unselected actions remain. Review reports/logs for sensitive data before any user-directed sharing; nothing is automatically uploaded. Hashes prove consistency, not authenticity or correctness. Verify a relocated archive with the trusted runner's `verifyPortableBundle(directory, expectedRunId?)` from `src/outputs.mjs` (standalone copied skill: `scripts/runner/src/outputs.mjs`), without executing archived commands. The original owned verifier and cleanup retain their ownership requirements.
+
+Evidence is buffered in memory; large-package/resource limits and interrupted writes have not been measured. Export creates exclusively, publishes its manifest last and verifies read-back. A later write failure leaves a partial directory and diagnostic; do not call it verified or overwrite/delete it automatically. Inspect the failure and choose a fresh destination. No new host/model instruction-following guarantee follows from these file/runner checks.
+
 ## Required cleanup decision
 
 After showing the verified output, ask:
