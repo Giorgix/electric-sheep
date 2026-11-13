@@ -19,7 +19,7 @@ for (const root of candidates) {
 }
 if (!entry) {
   console.error(
-    'Electronic Sheeps runner is missing. Install the complete plugin/standalone bundle, not SKILL.md alone.',
+    'Electric Sheep runner is missing. Install the complete plugin/standalone bundle, not SKILL.md alone.',
   );
   process.exitCode = 1;
 } else {

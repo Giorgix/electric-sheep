@@ -1,5 +1,5 @@
 interface:
-  display_name: "Evolution Stress Test"
+  display_name: "Electric Sheep Evolution Stress Test"
   short_description: "Challenge code through realistic successive changes"
   default_prompt: "Use $evolution-stress-test to test how this feature survives realistic next changes, in isolation."
 policy:

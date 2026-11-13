@@ -154,7 +154,7 @@ export async function evaluateChallenge(run) {
   if (results.some((r) => r.status === 'interrupted'))
     return stop(run, 'cancelled', 'Evaluation interrupted');
   if (results.every((r) => r.status === 'passed')) {
-    const result = await checkpoint(run, `Electronic Sheeps: ${challenge.id}`);
+    const result = await checkpoint(run, `Electric Sheep: ${challenge.id}`);
     round.status = 'passed';
     round.afterCheckpoint = result.commit;
     run.currentIndex++;

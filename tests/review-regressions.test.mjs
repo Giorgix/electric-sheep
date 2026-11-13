@@ -79,7 +79,7 @@ test('freeze blocks infrastructure failure instead of treating it as expected re
   const { run } = await protocolFixture(t);
   await runBaseline(run);
   const plan = structuredClone(run.plan);
-  plan.commands.find((c) => c.id === 'check1').executable = 'sheeps-nonexistent-check';
+  plan.commands.find((c) => c.id === 'check1').executable = 'electric-sheep-nonexistent-check';
   await amendPlan(run, plan, 'Approved command change');
   await addAcceptance(run, 1);
   await freezeChallenge(run);

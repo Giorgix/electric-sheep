@@ -44,7 +44,7 @@ export async function packageLocal({ host, out }) {
   )
     throw new Error('Output already exists and is not an empty directory');
   await mkdir(dirname(output), { recursive: true });
-  const stage = await mkdtemp(join(dirname(output), '.sheeps-package-'));
+  const stage = await mkdtemp(join(dirname(output), '.electric-sheep-package-'));
   try {
     const paths = [
       'package.json',
@@ -57,6 +57,7 @@ export async function packageLocal({ host, out }) {
       'examples',
       `.${host}-plugin/plugin.json`,
     ];
+    if (host === 'claude') paths.push('.claude-plugin/marketplace.json');
     for (const path of paths) await copyPlain(join(source, path), join(stage, path));
     if (host === 'codex') {
       const embedded = join(stage, 'skills/evolution-stress-test/scripts/runner');

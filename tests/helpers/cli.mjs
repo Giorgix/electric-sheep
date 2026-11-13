@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
-export const cliPath = fileURLToPath(new URL('../../bin/electronic-sheeps.mjs', import.meta.url));
+export const cliPath = fileURLToPath(new URL('../../bin/electric-sheep.mjs', import.meta.url));
 const exec = promisify(execFile);
 export async function cli(args, options = {}) {
   const env = { ...process.env };

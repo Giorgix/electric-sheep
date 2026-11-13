@@ -1,10 +1,10 @@
 {
-  "name": "electronic-sheeps",
-  "version": "0.1.0",
+  "name": "electric-sheep",
+  "version": "0.2.0",
   "description": "Evidence-driven evolution stress tests for coding agents",
   "type": "module",
   "bin": {
-    "electronic-sheeps": "bin/electronic-sheeps.mjs"
+    "electric-sheep": "bin/electric-sheep.mjs"
   },
   "files": [
     "bin/",

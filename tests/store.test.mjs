@@ -10,7 +10,7 @@ import { createRepo } from './helpers/repos.mjs';
 import { plan } from './helpers/plans.mjs';
 export async function storedRun(t) {
   const repo = await createRepo();
-  const root = await mkdtemp(join(tmpdir(), 'sheeps runs ü '));
+  const root = await mkdtemp(join(tmpdir(), 'electric-sheep runs ü '));
   t.after(async () => {
     await rm(root, { recursive: true, force: true });
     await repo.dispose();

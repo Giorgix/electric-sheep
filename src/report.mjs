@@ -172,7 +172,7 @@ export async function buildReport(run) {
 const escape = (value) => String(value).replace(/[&<>\[\]`*_\\]/g, (c) => `&#${c.charCodeAt(0)};`);
 function markdown(report) {
   const lines = [
-    '# Electronic Sheeps evolution report',
+    '# Electric Sheep evolution report',
     '',
     `Run: ${report.id}`,
     `Status: **${report.status}**`,

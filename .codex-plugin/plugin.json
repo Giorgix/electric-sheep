@@ -1,12 +1,12 @@
 {
-  "name": "electronic-sheeps",
-  "version": "0.1.0",
+  "name": "electric-sheep",
+  "version": "0.2.0",
   "description": "Local evolution stress tests for maintainable AI-generated software",
-  "author": {"name": "Electronic Sheeps contributors"},
+  "author": {"name": "Electric Sheep contributors"},
   "repository": "https://github.com/Giorgix/electric-sheep",
   "skills": "./skills/",
   "interface": {
-    "displayName": "Electronic Sheeps",
+    "displayName": "Electric Sheep",
     "shortDescription": "Challenge code through realistic successive changes"
   }
 }
