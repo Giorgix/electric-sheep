@@ -1,0 +1,6 @@
+interface:
+  display_name: "Evolution Stress Test"
+  short_description: "Challenge code through realistic successive changes"
+  default_prompt: "Use $evolution-stress-test to test how this feature survives realistic next changes, in isolation."
+policy:
+  allow_implicit_invocation: false

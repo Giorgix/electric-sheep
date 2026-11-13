@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "scope": ["checkout.mjs"],
+  "commands": [
+    {"id": "baseline", "executable": "node", "args": ["--test", "checkout.test.mjs"], "purpose": "check"},
+    {"id": "multi", "executable": "node", "args": ["--test", "round1.test.mjs"], "purpose": "check"},
+    {"id": "money", "executable": "node", "args": ["--test", "round2.test.mjs"], "purpose": "check"},
+    {"id": "orders", "executable": "node", "args": ["--test", "round3.test.mjs"], "purpose": "check"}
+  ],
+  "setupCommandIds": [],
+  "baselineCommandIds": ["baseline"],
+  "baselineProtectedPaths": ["checkout.test.mjs"],
+  "coverage": "existing",
+  "coverageNote": "Small local sample; no integration or production coverage",
+  "challenges": [
+    {"id": "multiple-items", "requirement": "Preserve total(item); add totalItems(items), rejecting an empty cart and non-finite or negative prices.", "rationale": "A second item exercises extension and input boundaries.", "constraints": ["Preserve total(item) for existing callers"], "protectedPaths": ["round1.test.mjs"], "commandIds": ["multi"], "stopCondition": "Stop on a regression or after one repair"},
+    {"id": "money-rounding", "requirement": "Round cart totals once to two decimal places using half-up rounding for nonnegative amounts; preserve zero and reject invalid prices.", "rationale": "Monetary boundaries reveal happy-path arithmetic assumptions.", "constraints": ["Preserve multi-item validation and legacy API"], "protectedPaths": ["round2.test.mjs"], "commandIds": ["money"], "stopCondition": "Stop on a regression or after one repair"},
+    {"id": "idempotent-orders", "requirement": "Add createOrderStore() with place(id, items). A repeated id and identical items returns the original order; a repeated id with different items fails without replacing it.", "rationale": "Repeated requests expose state and boundary handling without external services.", "constraints": ["In-memory only; preserve earlier total and validation requirements"], "protectedPaths": ["round3.test.mjs"], "commandIds": ["orders"], "stopCondition": "Stop on a regression or after one repair"}
+  ],
+  "exclusions": [],
+  "host": "local coding host",
+  "roleSeparation": "single-agent"
+}
