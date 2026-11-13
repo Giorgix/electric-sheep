@@ -79,4 +79,5 @@ test('cleanup does not follow a directory symlink into source', async (t) => {
   );
   await cleanupWorkspace(run);
   assert.equal(await readFile(join(repo.root, 'source.txt'), 'utf8'), 'baseline\n');
+  await assert.rejects(access(run.workspace));
 });

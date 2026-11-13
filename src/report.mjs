@@ -1,6 +1,13 @@
-import { readFile, writeFile, rename, realpath, lstat } from 'node:fs/promises';
+import { realpath, lstat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { randomUUID } from 'node:crypto';
+import {
+  buildFollowUp,
+  validateFollowUp,
+  renderNextActions,
+  renderImplementationPlan,
+  renderAgentPrompt,
+} from './follow-up.mjs';
+import { outputPaths, writeOutputBundle, describeClosing } from './outputs.mjs';
 import { nonempty, relativePath } from './contracts.mjs';
 import { contained } from './repository.mjs';
 import { runGit } from './git.mjs';
@@ -121,7 +128,7 @@ export async function collectDeltas(run) {
   return run.deltas;
 }
 export async function buildReport(run) {
-  return {
+  const report = {
     schemaVersion: 1,
     id: run.id,
     status: run.outcome ?? run.phase,
@@ -168,6 +175,8 @@ export async function buildReport(run) {
         'Inspect status; resume only after prior processes have stopped. Cleanup requires explicit run-id confirmation. No fixes are merged automatically.',
     },
   };
+  report.followUp = buildFollowUp(report, run.followUp);
+  return report;
 }
 const escape = (value) => String(value).replace(/[&<>\[\]`*_\\]/g, (c) => `&#${c.charCodeAt(0)};`);
 function markdown(report) {
@@ -223,7 +232,8 @@ function markdown(report) {
   lines.push(
     '',
     '## 5. Recommended next actions',
-    ...report.nextActions.map((v) => `- ${escape(v)}`),
+    renderNextActions(report).replace(/^# Recommended next actions\n\n/, ''),
+    '[Implementation plan](implementation-plan.md) · [Agent prompt](agent-prompt.md) · [Integrity manifest](outputs.json)',
     'Review untested requirements and permission/coverage limits before bringing back any fix.',
     '',
     '## 6. Resume and cleanup',
@@ -234,16 +244,34 @@ function markdown(report) {
   );
   return lines.join('\n');
 }
-async function atomicReport(path, content) {
-  const temp = `${path}.${randomUUID()}.tmp`;
-  await writeFile(temp, content, { flag: 'wx', mode: 0o600 });
-  await rename(temp, path);
-}
-export async function writeReports(run) {
+export async function writeReports(run, { followUp } = {}) {
+  if (followUp !== undefined) {
+    const validated = validateFollowUp(followUp, { findings: run.findings });
+    run.followUp = validated;
+    await saveRun(run);
+  }
   const report = await buildReport(run);
-  const jsonPath = join(run.directory, 'report.json'),
-    markdownPath = join(run.directory, 'report.md');
-  await atomicReport(jsonPath, JSON.stringify(report, null, 2) + '\n');
-  await atomicReport(markdownPath, markdown(report));
-  return { jsonPath, markdownPath };
+  const artifacts = [...run.protectedArtifacts, ...run.rounds.flatMap((r) => r.protectedArtifacts)];
+  const evidenceRefs = [
+    ...run.findings.flatMap((f) => f.evidenceRefs),
+    ...run.commandResults.flatMap((r) => [r.stdoutPath, r.stderrPath]),
+    ...run.events.map((e) => e.diffPath),
+    ...run.deltas.map((d) => d.evidenceRef),
+    ...artifacts.map((a) => a.evidencePath),
+  ].filter(Boolean);
+  const paths = await writeOutputBundle(
+    run,
+    {
+      'report.json': JSON.stringify(report, null, 2) + '\n',
+      'report.md': markdown(report),
+      'next-actions.md': renderNextActions(report),
+      'implementation-plan.md': renderImplementationPlan(report),
+      'agent-prompt.md': renderAgentPrompt(report, {
+        directory: run.directory,
+        ...outputPaths(run),
+      }),
+    },
+    evidenceRefs,
+  );
+  return { ...paths, closing: describeClosing(run, paths) };
 }

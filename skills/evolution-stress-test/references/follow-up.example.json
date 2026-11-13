@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "actions": [
+    {
+      "id": "validate-boundary",
+      "title": "Validate the suspected boundary omission",
+      "findingIds": ["boundary-risk"],
+      "priority": "untriaged",
+      "rationale": "This is an unproven risk; establish applicability and reproduce it before changing source.",
+      "targetPaths": [],
+      "steps": [
+        "Review the recorded finding and the current feature requirements.",
+        "Identify the relevant source and test paths without assuming experimental files still exist.",
+        "Propose a focused regression test and commands for approval.",
+        "Implement a minimal fix only if the approved test demonstrates an applicable defect."
+      ],
+      "acceptanceCriteria": [
+        "The risk is reproduced or explicitly dismissed with evidence.",
+        "Approved existing and new regression checks pass without weakening earlier checks."
+      ],
+      "dependsOn": []
+    }
+  ]
+}

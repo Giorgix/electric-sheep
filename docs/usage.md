@@ -28,13 +28,13 @@ All commands accept `--runs-root PATH`, defaulting to `~/.electric-sheep/runs`. 
 | `amend` | `--run ID --plan FILE --approval-note TEXT` | Preserve prior approval/tests/results; explicitly amend before evaluation |
 | `finding` | `--run ID --file FILE` | Add attributed, evidence-linked agent interpretation |
 | `status` | `--run ID` | Read saved state without executing project code |
-| `report` | `--run ID` | Save `report.md` and `report.json`; read-only with respect to project code |
+| `report` | `--run ID`, optional `--follow-up FILE` | Publish/verify report, next actions, implementation plan, agent prompt and hash manifest; no project execution |
 | `resume` | `--run ID` | Validate checkpoint/artifacts and mark pending commands interrupted, never passed |
 | `recover-lock` | `--run ID --approval-note TEXT` | Explicit recovery only after confirming old processes stopped |
 | `cancel` | `--run ID --note TEXT` | Record terminal cancellation |
-| `cleanup` | `--run ID --confirm ID` | Cancel unfinished work, save evidence/report, remove only the owned worktree |
+| `cleanup` | `--run ID --confirm ID` | Snapshot final changes, cancel unfinished work, verify output, remove only the owned worktree and verify actual absence |
 
-`cleanup --delete-evidence` additionally deletes the entire owned run including reports. This is explicit and destructive. Default cleanup retains reports and logs. No broad `git clean` or `prune` is used.
+`cleanup --delete-evidence` additionally deletes the entire owned run including reports, follow-up plan and prompt. This is explicit and destructive, not the normal session-ending offer. Default cleanup retains the complete package, logs, acceptance snapshots and diffs. No broad `git clean` or `prune` is used. Run cleanup from outside the worktree; for full evidence deletion also stay outside the run directory.
 
 ## Existing runs after a rename
 
@@ -76,6 +76,32 @@ After a crash, inspect `status`, confirm old processes have stopped, explicitly 
 A finding JSON object has `id`, `category`, `origin`, `impact`, `summary`, `evidenceRefs`, and `recommendation`. Categories: `defect`, `evolution-friction`, `maintainability-concern`, `hypothesis`. Origins: `baseline`, `experimental`, `uncertain`. References must be existing run-relative `evidence/` files, obtained from command records or diff/artifact events. Defects need failed-check evidence; structural concerns need code/diff evidence. Hypotheses may have no executed evidence but stay explicitly unproven.
 
 Reports contain scope/baseline/environment limits; the approved plan and executable/argv/cwd/timeout inventory; per-challenge requirements and evidence; regressions and structural deltas; attributed findings; next actions; resume/cleanup. Each executed command also records its exact specification so later approved command amendments do not obscure historical execution. Structural measurements are text-file Git deltas, not semantic complexity scores. Generated/binary files are excluded. Interpretation remains the agent's judgment, not a runner-certified quality verdict.
+
+### Actionable follow-up input
+
+The host agent authors the input; ordinary users only review the output and approve any further work. See the [example and contract](../skills/evolution-stress-test/references/follow-up.md). After recording findings:
+
+```bash
+node /absolute/path/to/electric-sheep/bin/electric-sheep.mjs report --run ID --follow-up /absolute/path/to/follow-up.json --runs-root /absolute/path/to/runs
+```
+
+Input uses `schemaVersion: 1` and an `actions` array. Each action needs unique `id`, `title`, one or more existing `findingIds`, `priority` (`high|medium|low|untriaged`), `rationale`, repository-relative `targetPaths` (empty if unknown), nonempty string arrays `steps` and `acceptanceCriteria`, and `dependsOn` action IDs. Unknown findings/dependencies, cycles, escaping paths, or malformed input are usage errors (exit 2) without modifying run state or previous outputs. Priorities are agent judgments; categories/origins/evidence and mandatory gates are derived from findings. New proposed files need not already exist.
+
+Validated input is saved as optional `run.followUp`, separate from the approved exercise plan. Later reporting and cleanup reuse it; source schema-1 runs need no migration. A plain `report --run ID` remains available. Without authored input it produces a labeled runner-template draft with untriaged priorities and no fabricated file locations. No findings means coverage/recovery guidance, not invented defects; a blocked baseline needs diagnosis before implementation.
+
+### Output verification and closing
+
+A successful report returns absolute `jsonPath`, `markdownPath`, `nextActionsPath`, `implementationPlanPath`, `agentPromptPath`, and `outputManifestPath`. These point to `report.json`, `report.md`, `next-actions.md`, `implementation-plan.md`, `agent-prompt.md`, and `outputs.json` in the owned run directory. `outputs.json` is published last and hashes the five deliverables plus referenced retained evidence. Files are individually atomic, not a multi-file transaction: missing/mismatched data means incomplete publication, not a usable verified package. Repair the problem and rerun report. Hashes record file integrity, not the truth of agent conclusions.
+
+For non-cleaned runs the response also contains `closing.requiresConfirmation: true`, `choices: ["remove-worktree", "keep-worktree"]`, retained paths and a `cleanup` object with absolute `executable`, literal `args`, and outside-worktree `cwd`. The host must first present the package and explicitly ask which choice the user wants. No answer means keep; receiving a descriptor is not consent. A report for a recorded cleaned run has no cleanup command/choices and makes no fresh removal claim.
+
+After explicit removal approval, stop known project processes and execute the returned command from the returned cwd. Cleanup refuses `running` result records; after confirming processes stopped, use `resume` to mark pending results interrupted (including terminal runs, without reopening them). It cannot detect or stop arbitrary escaped descendants. Stop concurrent edits during closing.
+
+Default cleanup first verifies any previously published package, refusing changed/missing artifacts or evidence rather than silently replacing their hashes. An incomplete follow-up package with no manifest also blocks removal; legacy report-only runs can still be upgraded. It then saves a final binary-capable diff of tracked/nonignored new changes, preserves earlier checkpoint patches and acceptance snapshots, regenerates/verifies all outputs, and only then removes the verified owned worktree. Ignored files such as credentials/dependency directories are not copied. A successful receipt contains `verified: true`, `phase: cleaned`, original `outcome`, `evidenceDeleted: false`, and retained paths. Both filesystem and Git registration absence are checked. Windows junction residue is removed only under the already validated owned path; nested link targets are not followed.
+
+Failures preserve available output/worktree data and must not be presented as success. For a locked worktree, inspect why it is locked and resolve the specific lock only with appropriate approval, then retry the same confirmed command. For cwd errors, leave the worktree first. For output/evidence errors, inspect the mismatch first and restore/reconstruct valid evidence while the worktree is retained, then explicitly repair/regenerate before retrying. Do not simply rehash corrupted evidence to silence the error. For ownership, registration, checkpoint, or missing-source mismatches, stop for manual inspection; do not adopt foreign paths or broadly prune metadata. Repeated cleanup is idempotent but refuses a foreign path recreated at the old workspace location.
+
+The report is a historical snapshot; current cleanup state is in status/the receipt. Reports can be regenerated after cleanup from retained state without the old worktree. The handoff tells the next agent to verify the package, review repository/HEAD drift, use a new feature branch, reproduce applicable findings and seek fresh command/dependency approval. It must not rely on surviving detached commits or blindly apply experimental patches. Explicit `--delete-evidence` instead removes the entire run and returns no retained paths.
 
 ## Safety, privacy, and supported inputs
 

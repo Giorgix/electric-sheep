@@ -6,6 +6,9 @@ import { join } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { packageLocal } from '../scripts/package-local.mjs';
+import { protocolFixture } from './helpers/protocol.mjs';
+import { addFinding } from '../src/report.mjs';
+import { findingInput } from './helpers/follow-up.mjs';
 const source = join(import.meta.dirname, '..');
 async function temp(t) {
   const root = await mkdtemp(join(tmpdir(), 'electric-sheep bundles ü '));
@@ -52,6 +55,31 @@ test('standalone Codex skill keeps its runner after copying only the complete ge
     { cwd: root },
   );
   assert.match(result.stdout, /Electric Sheep/);
+  const fixture = await protocolFixture(t);
+  await addFinding(fixture.run, findingInput('boundary-risk'));
+  const args = ['--run', fixture.run.id, '--runs-root', fixture.root];
+  const report = await promisify(execFile)(
+    process.execPath,
+    [
+      join(installed, 'scripts/run.mjs'),
+      'report',
+      ...args,
+      '--follow-up',
+      join(installed, 'references/follow-up.example.json'),
+    ],
+    { cwd: root },
+  );
+  const paths = JSON.parse(report.stdout);
+  await access(paths.agentPromptPath);
+  await access(fixture.run.workspace);
+  const cleaned = await promisify(execFile)(
+    paths.closing.cleanup.executable,
+    paths.closing.cleanup.args,
+    { cwd: paths.closing.cleanup.cwd },
+  );
+  assert.equal(JSON.parse(cleaned.stdout).verified, true);
+  await assert.rejects(access(fixture.run.workspace));
+  await access(paths.implementationPlanPath);
 });
 test('Claude bundle carries a self-contained catalog whose root skill runner works', async (t) => {
   const root = await temp(t),

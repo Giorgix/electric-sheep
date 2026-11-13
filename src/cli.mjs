@@ -5,7 +5,9 @@ import { join, resolve } from 'node:path';
 import { validatePlan } from './contracts.mjs';
 import { inspectRepository } from './repository.mjs';
 import { createRun, loadRun, withRunLock, recoverLock } from './store.mjs';
-import { createWorkspace, cleanupWorkspace } from './workspace.mjs';
+import { createWorkspace } from './workspace.mjs';
+import { finalizeCleanup } from './closing.mjs';
+import { validateFollowUp } from './follow-up.mjs';
 import {
   runBaseline,
   freezeChallenge,
@@ -20,7 +22,8 @@ const help = `Electric Sheep — isolated evolution stress tests
 Usage: electric-sheep <verb> [options]
   inspect --repo PATH --scope PATH
   start --repo PATH --plan FILE --approval-note TEXT
-  baseline|freeze|evaluate|status|report|resume --run ID
+  baseline|freeze|evaluate|status|resume --run ID
+  report --run ID [--follow-up FILE]
   amend --run ID --plan FILE --approval-note TEXT
   finding --run ID --file FILE
   recover-lock --run ID --approval-note TEXT
@@ -37,7 +40,7 @@ const flags = {
   freeze: ['run'],
   evaluate: ['run'],
   status: ['run'],
-  report: ['run'],
+  report: ['run', 'follow-up'],
   resume: ['run'],
   amend: ['run', 'plan', 'approval-note'],
   finding: ['run', 'file'],
@@ -76,7 +79,7 @@ export async function main(argv, { stdout = process.stdout, stderr = process.std
     }
     for (const name of flags[verb])
       if (
-        !['delete-evidence', 'scope'].includes(name) &&
+        !['delete-evidence', 'scope', 'follow-up'].includes(name) &&
         (typeof values[name] !== 'string' || !values[name].trim())
       )
         throw new UsageError(`Missing --${name}`);
@@ -127,24 +130,22 @@ export async function main(argv, { stdout = process.stdout, stderr = process.std
             return addFinding(run, await jsonFile(values.file));
           case 'cancel':
             return cancelRun(run, values.note);
-          case 'report':
-            await collectDeltas(run);
-            return writeReports(run);
-          case 'cleanup': {
-            if (!run.outcome && run.phase !== 'cleaned')
-              await cancelRun(run, 'Explicit cleanup of unfinished exercise');
-            if (run.phase !== 'cleaned') {
-              await collectDeltas(run);
-              await writeReports(run);
+          case 'report': {
+            let followUp;
+            if (values['follow-up'] !== undefined) {
+              try {
+                followUp = validateFollowUp(await jsonFile(values['follow-up']), {
+                  findings: run.findings,
+                });
+              } catch (error) {
+                throw new UsageError(error.message);
+              }
             }
-            await cleanupWorkspace(run, { deleteEvidence: values['delete-evidence'] ?? false });
-            return {
-              id: run.id,
-              phase: 'cleaned',
-              outcome: run.outcome,
-              evidenceDeleted: Boolean(values['delete-evidence']),
-            };
+            await collectDeltas(run);
+            return writeReports(run, { followUp });
           }
+          case 'cleanup':
+            return finalizeCleanup(run, { deleteEvidence: values['delete-evidence'] ?? false });
         }
       });
     }
