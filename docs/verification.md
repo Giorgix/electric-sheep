@@ -8,6 +8,20 @@ This is a local preview, not a claim of universal reliability or production read
 - Claude Code 2.1.302 is available. CLI help confirms `--plugin-dir` and `plugin validate --strict --json`.
 - Codex is not on PATH.
 
+## Multi-client README verification (2026-11-13)
+
+This documentation-only follow-up adds installation recipes, not new runtime integrations or universal support guarantees.
+
+- Inspected current official OpenAI skill/plugin and OpenCode skill documentation, plus the installed Pi 1.5.2 package, skill, and CLI documentation. OpenAI currently documents ChatGPT desktop personal marketplaces and the `.codex-plugin/plugin.json` compatibility fallback; the README labels that recipe experimental rather than implying a public listing or verified ChatGPT behavior.
+- Executed the README's literal standalone clone/build commands against **public GitHub `main`**, separately in temporary homes for Bash/Git Bash and Windows PowerShell. No dependency installation was needed. The production runner/bundler is unchanged from that source.
+- Executed both shells' documented Codex and OpenCode copy commands. Each installed folder matched the complete generated skill byte-for-byte. A second execution preserved the existing installation without nesting or overwriting it. Both documented installed-runner `--help` commands worked from an unrelated working directory.
+- Parsed the ChatGPT example marketplace JSON, resolved its home-relative source path to the complete bundle, checked the matching compatibility-manifest identity and skill path, and executed that bundle's runner. **This is a catalog/package smoke check, not a ChatGPT installation, UI, discovery, or execution test.**
+- Used Pi 1.5.2's real `DefaultResourceLoader` with an in-memory local package declaration, an isolated temporary agent/home, offline mode, telemetry disabled, and extensions/context/prompts/themes disabled. It discovered exactly one skill, `evolution-stress-test`, with no diagnostics and `disableModelInvocation: true`. Its discovered runner executed from an unrelated directory. **This verifies native local package discovery, not `pi install` from GitHub, interactive command routing, or model instruction following.**
+- Checked README internal navigation anchors and successful HTTP responses for the referenced current Pi package/skill guides. The full automated suite passed **94/94**, as did `npm run check`, `npm run format:check`, `npm pack --dry-run`, and `git diff --check`.
+- Whole-diff author self-review only; no independent reviewer tool was available. No runtime, manifest, dependency, or schema changes were made.
+- Only owned temporary clone/bundle/home directories were removed. Real client settings, existing installations, and run evidence were not changed. No model calls or dependency installation were performed.
+- Codex, ChatGPT, and OpenCode live host behavior remains unverified. No new Claude installation check was performed in this follow-up; prior isolated local-marketplace evidence is below. Public Git clones do not establish either Claude's or Pi's native GitHub install transport, and no future-version upgrade was tested.
+
 ## Electric Sheep 0.2.0 installation verification (2026-11-13)
 
 - Code commit `abfc736`: complete automated suite **94/94** passes locally, including actual new-default storage, explicit-root schema-1 access, renamed CLI/report/checkpoint identity, catalog delivery, both bundles, and the independently copied Codex runner.
