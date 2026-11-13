@@ -1,6 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { writeFile, readFile, access, mkdir, rename, rm } from 'node:fs/promises';
+import {
+  writeFile,
+  readFile,
+  access,
+  mkdir,
+  rename,
+  rm,
+  realpath,
+  symlink,
+} from 'node:fs/promises';
 import { addFinding } from '../src/report.mjs';
 import { findingInput, followUpInput } from './helpers/follow-up.mjs';
 import { verifyOutputBundle } from '../src/outputs.mjs';
@@ -77,35 +86,47 @@ test('full CLI workflow preserves source and cleans idempotently', async (t) => 
   assert.ok(report.markdownPath);
   assert.deepEqual(await repo.snapshot(), original);
 });
-test('report authors handoff without deleting and its exact closing command cleans safely', async (t) => {
-  const { root, run } = await protocolFixture(t);
-  await addFinding(run, findingInput());
-  const input = join(root, 'follow-up.json');
-  await writeFile(input, JSON.stringify(followUpInput()));
-  const report = await cli(['report', '--run', run.id, '--runs-root', root, '--follow-up', input]);
-  assert.equal(report.exitCode, 0, report.stderr);
-  const paths = JSON.parse(report.stdout);
-  await access(run.workspace);
-  assert.equal(paths.closing.requiresConfirmation, true);
-  assert.equal(paths.closing.cleanup.cwd, root);
-  await access(paths.agentPromptPath);
-  await access(paths.implementationPlanPath);
-  const result = await promisify(execFile)(
-    paths.closing.cleanup.executable,
-    paths.closing.cleanup.args,
-    { cwd: paths.closing.cleanup.cwd },
-  );
-  const receipt = JSON.parse(result.stdout);
-  assert.equal(receipt.verified, true);
-  assert.equal(receipt.retainedPaths.length, 6);
-  await assert.rejects(access(run.workspace));
-  const saved = await loadRun(root, run.id);
-  assert.equal(saved.followUp.actions[0].id, 'boundary');
-  await verifyOutputBundle(saved);
-  const regenerated = await cli(['report', '--run', run.id, '--runs-root', root]);
-  assert.equal(regenerated.exitCode, 0, regenerated.stderr);
-  assert.equal(JSON.parse(regenerated.stdout).closing.requiresConfirmation, false);
-});
+for (const viaAlias of [false, true])
+  test(`report authors handoff without deleting and exact closing command cleans safely (alias=${viaAlias})`, async (t) => {
+    const { root, run } = await protocolFixture(t);
+    const requestedRoot = viaAlias ? join(root, 'root alias') : root;
+    if (viaAlias)
+      await symlink(root, requestedRoot, process.platform === 'win32' ? 'junction' : 'dir');
+    await addFinding(run, findingInput());
+    const input = join(root, 'follow-up.json');
+    await writeFile(input, JSON.stringify(followUpInput()));
+    const report = await cli([
+      'report',
+      '--run',
+      run.id,
+      '--runs-root',
+      requestedRoot,
+      '--follow-up',
+      input,
+    ]);
+    assert.equal(report.exitCode, 0, report.stderr);
+    const paths = JSON.parse(report.stdout);
+    await access(run.workspace);
+    assert.equal(paths.closing.requiresConfirmation, true);
+    assert.equal(paths.closing.cleanup.cwd, await realpath(requestedRoot));
+    await access(paths.agentPromptPath);
+    await access(paths.implementationPlanPath);
+    const result = await promisify(execFile)(
+      paths.closing.cleanup.executable,
+      paths.closing.cleanup.args,
+      { cwd: paths.closing.cleanup.cwd },
+    );
+    const receipt = JSON.parse(result.stdout);
+    assert.equal(receipt.verified, true);
+    assert.equal(receipt.retainedPaths.length, 6);
+    await assert.rejects(access(run.workspace));
+    const saved = await loadRun(root, run.id);
+    assert.equal(saved.followUp.actions[0].id, 'boundary');
+    await verifyOutputBundle(saved);
+    const regenerated = await cli(['report', '--run', run.id, '--runs-root', root]);
+    assert.equal(regenerated.exitCode, 0, regenerated.stderr);
+    assert.equal(JSON.parse(regenerated.stdout).closing.requiresConfirmation, false);
+  });
 for (const kind of ['invalid JSON', 'missing file', 'invalid contract'])
   test(`report rejects ${kind} without changing run state`, async (t) => {
     const { root, run } = await protocolFixture(t);
