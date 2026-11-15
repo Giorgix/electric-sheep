@@ -1,9 +1,15 @@
 import { lstat, realpath, writeFile, rm } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { runGit } from './git.mjs';
 import { ownedDirectory, saveRun } from './store.mjs';
 import { assertNoFilters } from './repository.mjs';
+import {
+  captureWorkspaceIdentity,
+  finishWorkspaceRemoval,
+  isWorkspaceRegistered,
+} from './workspace-cleanup.mjs';
+export { isWorkspaceRegistered } from './workspace-cleanup.mjs';
 
 async function checkOwnership(run) {
   const owner = await ownedDirectory(run.directory, run.id);
@@ -13,15 +19,6 @@ async function checkOwnership(run) {
   ) {
     throw new Error('Invalid workspace ownership');
   }
-}
-export async function isWorkspaceRegistered(run) {
-  const listing = await runGit(run.repository.root, ['worktree', 'list', '--porcelain', '-z']);
-  return listing
-    .split('\0')
-    .some(
-      (field) =>
-        field.startsWith('worktree ') && resolve(field.slice(9)) === resolve(run.workspace),
-    );
 }
 export async function validateWorkspace(run) {
   await checkOwnership(run);
@@ -117,34 +114,25 @@ export async function cleanupWorkspace(run, { deleteEvidence = false } = {}) {
   if (run.phase === 'cleaned' && (existing || registered))
     throw new Error('Unexpected workspace after cleanup; refusing foreign replacement');
   if (run.phase !== 'cleaned') {
+    let identity = null;
+    let gitError = null;
     if (registered) {
       await validateWorkspace(run);
-      await runGit(run.repository.root, ['worktree', 'remove', '--force', run.workspace]);
+      identity = await captureWorkspaceIdentity(run.workspace);
+      try {
+        await runGit(run.repository.root, ['worktree', 'remove', '--force', run.workspace]);
+      } catch (error) {
+        gitError = error;
+      }
     } else if (existing) throw new Error('Cannot clean unregistered workspace');
-    const remaining = await lstat(run.workspace).catch((e) => {
-      if (e.code !== 'ENOENT') throw e;
-      return null;
-    });
-    if (await isWorkspaceRegistered(run))
-      throw new Error('Workspace cleanup registration postcondition failed');
-    if (remaining) {
-      // Git for Windows can leave junction entries behind after unregistering.
-      // Remove only this previously validated owned directory; fs.rm unlinks
-      // nested symlinks/junctions rather than traversing their targets.
-      if (
-        remaining.isSymbolicLink() ||
-        !remaining.isDirectory() ||
-        (await realpath(run.workspace)) !== run.workspace
-      )
-        throw new Error('Unexpected workspace residue');
-      await rm(run.workspace, { recursive: true, force: true, maxRetries: 3 });
-      if (
-        await lstat(run.workspace).catch((e) => {
-          if (e.code !== 'ENOENT') throw e;
-          return null;
-        })
-      )
-        throw new Error('Workspace cleanup path postcondition failed');
+    const { residueRemoved } = await finishWorkspaceRemoval(run, identity, gitError);
+    if (gitError) {
+      run.events.push({
+        type: 'cleanup-git-error-recovered',
+        at: new Date().toISOString(),
+        gitExitCode: Number.isInteger(gitError.code) ? gitError.code : null,
+        residueRemoved,
+      });
     }
     run.phase = 'cleaned';
     await saveRun(run);
