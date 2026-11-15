@@ -1,6 +1,6 @@
 # Bounded recovery after partial Git worktree removal
 
-Status: approach A selected by the user; this written design awaits approval.
+Status: approach A and this written design approved by the user on 2026-11-15; implementation awaits plan and command-inventory approval.
 Date: 2026-11-15
 Base: observed remote `main`, `e1155a64f14aacebe96622a536f1403487811da7`.
 
