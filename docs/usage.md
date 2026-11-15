@@ -28,7 +28,8 @@ All commands accept `--runs-root PATH`, defaulting to `~/.electric-sheep/runs`. 
 | `amend` | `--run ID --plan FILE --approval-note TEXT` | Preserve prior approval/tests/results; explicitly amend before evaluation |
 | `finding` | `--run ID --file FILE` | Add attributed, evidence-linked agent interpretation |
 | `status` | `--run ID` | Read saved state without executing project code |
-| `report` | `--run ID`, optional `--follow-up FILE` | Publish/verify report, next actions, implementation plan, agent prompt and hash manifest; no project execution |
+| `report` | `--run ID`, optional `--follow-up FILE`, repeatable `--priority VALUE` | Publish/verify report and selected follow-up view; no project execution |
+| `export` | `--run ID --out DIRECTORY`, repeatable `--priority VALUE` | Verify source publication and create a self-contained portable data archive; no project execution or source publication changes |
 | `resume` | `--run ID` | Validate checkpoint/artifacts and mark pending commands interrupted, never passed |
 | `recover-lock` | `--run ID --approval-note TEXT` | Explicit recovery only after confirming old processes stopped |
 | `cancel` | `--run ID --note TEXT` | Record terminal cancellation |
@@ -89,6 +90,42 @@ Input uses `schemaVersion: 1` and an `actions` array. Each action needs unique `
 
 Validated input is saved as optional `run.followUp`, separate from the approved exercise plan. Later reporting and cleanup reuse it; source schema-1 runs need no migration. A plain `report --run ID` remains available. Without authored input it produces a labeled runner-template draft with untriaged priorities and no fabricated file locations. No findings means coverage/recovery guidance, not invented defects; a blocked baseline needs diagnosis before implementation.
 
+### Priority-selected views and portable export
+
+To focus an invocation, repeat `--priority` with `high`, `medium`, `low`, or `untriaged`:
+
+```bash
+node /absolute/path/to/electric-sheep/bin/electric-sheep.mjs report --run ID --runs-root /absolute/path/to/runs --priority high --priority medium
+```
+
+Values form a deduplicated union. The whole authored dependency graph is validated before filtering: even an unselected action with unknown dependencies or a cycle is invalid. The view includes each transitive prerequisite once, in dependency order, regardless of its priority. `followUp.selection` records `priorities` and the extra `dependencyIds`; plan/prompt notes explain these inclusions. Complete findings, legacy next-action strings, saved authored input, and the approved exercise plan remain intact. Selection is per invocation: report without `--priority` restores all actions. Invalid values are usage errors (2), preserving prior state/publication. No matches is an empty action view, not a statement that no findings exist. Template actions remain untriaged; no-findings reports do not invent tasks.
+
+Export requires an already valid source publication; run `report` first if none exists. Export refuses missing/changed published evidence rather than silently replacing source hashes. It does not regenerate the owned publication or change saved source state. It renders the current saved run state, so findings/actions added since the last report appear in the archive; previously published evidence must still match its old hashes, while newly referenced evidence is hashed for this export:
+
+```bash
+node /absolute/path/to/electric-sheep/bin/electric-sheep.mjs export --run ID --runs-root /absolute/path/to/runs --out /physical/export/parent/fresh-archive --priority high
+```
+
+The destination must **not exist**, including as an empty directory or file. Its parent must already exist, be its physical/canonical path, and be outside the source repository and runs root. Symlink/junction or other alias parents are refused; Windows path comparison is case-insensitive. For example, macOS `/var/...` can resolve to `/private/var/...`; first obtain the physical parent with Node and use that returned spelling:
+
+```bash
+node --input-type=module -e "import { realpath } from 'node:fs/promises'; console.log(await realpath(process.argv[1]));" /existing/export/parent
+```
+
+Success returns `{runId, directory, portable: true, verified: true, paths}`. The archive contains the five deliverables, `outputs.json`, and required `evidence/` files, not the entire worktree or unrelated evidence. **Priority selection is not redaction:** the complete report/findings and all referenced evidence remain, including unselected-action evidence. Reports, historical command metadata and logs can contain sensitive information; review before sharing. No automatic upload occurs.
+
+Move the whole archive together. Package/plan/evidence links are relative; source repository, baseline and command paths remain explicitly historical, not usable instructions to replay old commands. An archive has no run owner marker, saved-state adoption, or new cleanup offer. The runner's cleanup refuses it as a run; removing the original experimental worktree still needs separate confirmation. Use fresh approval and applicability checks before implementation.
+
+`verifyPortableBundle(directory, expectedRunId?)` is exported from the trusted installed runner's `src/outputs.mjs`; it does not require the original location or an owner marker. For a standalone copied skill, that module is under `scripts/runner/src/outputs.mjs`. This example verifies a relocated archive and its expected run identity without executing archived project commands:
+
+```bash
+node --input-type=module -e "import { pathToFileURL } from 'node:url'; const { verifyPortableBundle } = await import(pathToFileURL(process.argv[1]).href); console.log(await verifyPortableBundle(process.argv[2], process.argv[3]));" /absolute/path/to/electric-sheep/src/outputs.mjs /absolute/path/to/moved-archive RUN-ID
+```
+
+The owned verifier still enforces owner metadata; portability does not relax cleanup ownership. Verification checks fixed-file/evidence hashes and containment, cross-checks the report's schema/run identity, and requires its declared evidence references in the manifest. It does not prove authenticity, finding truth, redaction, or host confinement. Concurrent external editing/processes remain relevant.
+
+Export buffers referenced evidence in memory; no large-evidence operating envelope, resource limit, streaming behavior, or mid-write/interruption recovery has been established. Directory/files are created exclusively; `outputs.json` is published last and read back before success. A later I/O failure reports the partial archive path and leaves it for inspection without automatic deletion or overwrite. A partial directory is not a verified handoff. Resolve the failure and choose a fresh destination; review partial contents before manually removing them. Broad parent-alias usability and large-package behavior remain unproven, not automatically diagnosed defects.
+
 ### Output verification and closing
 
 A successful report returns absolute `jsonPath`, `markdownPath`, `nextActionsPath`, `implementationPlanPath`, `agentPromptPath`, and `outputManifestPath`. These point to `report.json`, `report.md`, `next-actions.md`, `implementation-plan.md`, `agent-prompt.md`, and `outputs.json` in the owned run directory. `outputs.json` is published last and hashes the five deliverables plus referenced retained evidence. Files are individually atomic, not a multi-file transaction: missing/mismatched data means incomplete publication, not a usable verified package. Repair the problem and rerun report. Hashes record file integrity, not the truth of agent conclusions.
@@ -96,6 +133,8 @@ A successful report returns absolute `jsonPath`, `markdownPath`, `nextActionsPat
 For non-cleaned runs the response also contains `closing.requiresConfirmation: true`, `choices: ["remove-worktree", "keep-worktree"]`, retained paths and a `cleanup` object with absolute `executable`, literal `args`, and outside-worktree `cwd`. The host must first present the package and explicitly ask which choice the user wants. No answer means keep; receiving a descriptor is not consent. A report for a recorded cleaned run has no cleanup command/choices and makes no fresh removal claim.
 
 After explicit removal approval, stop known project processes and execute the returned command from the returned cwd. Cleanup refuses `running` result records; after confirming processes stopped, use `resume` to mark pending results interrupted (including terminal runs, without reopening them). It cannot detect or stop arbitrary escaped descendants. Stop concurrent edits during closing.
+
+Cleanup is its own invocation without priority flags: it regenerates the full follow-up view from saved actions, even if the last report was selected. Export the selected view first if you want to preserve it independently.
 
 Default cleanup first verifies any previously published package, refusing changed/missing artifacts or evidence rather than silently replacing their hashes. An incomplete follow-up package with no manifest also blocks removal; legacy report-only runs can still be upgraded. It then saves a final binary-capable diff of tracked/nonignored new changes, preserves earlier checkpoint patches and acceptance snapshots, regenerates/verifies all outputs, and only then removes the verified owned worktree. Ignored files such as credentials/dependency directories are not copied. A successful receipt contains `verified: true`, `phase: cleaned`, original `outcome`, `evidenceDeleted: false`, and retained paths. Both filesystem and Git registration absence are checked. Windows junction residue is removed only under the already validated owned path; nested link targets are not followed.
 

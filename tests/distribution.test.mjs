@@ -23,7 +23,7 @@ test('release artifacts register the Electric Sheep package and matching plugin 
     await json('.codex-plugin/plugin.json'),
   ]) {
     assert.equal(metadata.name, 'electric-sheep');
-    assert.equal(metadata.version, '0.3.0');
+    assert.equal(metadata.version, '0.4.0');
   }
   assert.deepEqual(pkg.bin, { 'electric-sheep': 'bin/electric-sheep.mjs' });
   assert.deepEqual(lock.packages[''].bin, pkg.bin);
@@ -97,7 +97,7 @@ test('marketplace exposes the renamed root plugin with matching release metadata
   const entry = catalog.plugins[0];
   assert.equal(entry.name, 'electric-sheep');
   assert.equal(entry.source, './');
-  assert.equal(entry.version, '0.3.0');
+  assert.equal(entry.version, '0.4.0');
   assert.equal(entry.strict, true);
   const manifest = await json(join(entry.source, '.claude-plugin/plugin.json'));
   assert.equal(entry.name, manifest.name);

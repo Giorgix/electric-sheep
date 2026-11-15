@@ -91,6 +91,21 @@ At the end of a completed **or stopped** exercise, the agent shows the outcome a
 
 Priorities are agent judgments, not a quality score. Hypotheses need validation; experimental failures are not automatically bugs in your original code. The plan requires applicability and approval checks before adopting changes. If no findings justify implementation, the output says so instead of inventing work. Legacy/partial reports without agent-authored input use an explicitly labeled template draft.
 
+### Focus a handoff or export it (0.4.0)
+
+Optional CLI operations can focus the **action view**, without rerunning the exercise:
+
+```bash
+node /absolute/path/to/electric-sheep/bin/electric-sheep.mjs report --run ID --runs-root /absolute/path/to/runs --priority high --priority medium
+node /absolute/path/to/electric-sheep/bin/electric-sheep.mjs export --run ID --runs-root /absolute/path/to/runs --out /physical/export/parent/fresh-archive --priority high
+```
+
+Repeated priorities form a deduplicated union (`high`, `medium`, `low`, `untriaged`). All transitive prerequisites are included, even at other priorities, and explained in the plan/prompt. Omitting `--priority` restores the full view; saved authored actions are never deleted. An empty view does not mean there were no findings. Fallback drafts remain untriaged, not newly certified defects.
+
+**Selection is not redaction.** Exports retain complete findings and all referenced package evidence, including evidence for unselected actions. Review reports/logs for secrets before sharing; nothing is uploaded automatically. The absent destination must have an existing physical/canonical parent outside the source repository and runs root; resolve aliases first. Existing files/directories and symlink/junction parents are refused.
+
+A successful export returns `portable: true`, `verified: true`, its directory and file paths. Move the entire archive together: operational links remain relative, while original repository/command metadata is historical. The archive is data, **not an owned run** that the cleanup command can adopt. Original-run cleanup remains a separate confirmation. Evidence is buffered in memory; large-package limits and interrupted writes are unmeasured. A later write failure can leave a partial archive; inspect it and choose a fresh destination rather than treating it as verified. See [selection, export and relocation verification](docs/usage.md#priority-selected-views-and-portable-export).
+
 ### Example session ending
 
 ```text
