@@ -18,14 +18,22 @@ export async function captureWorkspaceIdentity(workspace) {
     return null;
   });
   if (
-    !info || info.isSymbolicLink() || !info.isDirectory() ||
-    typeof info.dev !== 'bigint' || info.dev < 0n ||
-    typeof info.ino !== 'bigint' || info.ino <= 0n ||
+    !info ||
+    info.isSymbolicLink() ||
+    !info.isDirectory() ||
+    typeof info.dev !== 'bigint' ||
+    info.dev < 0n ||
+    typeof info.ino !== 'bigint' ||
+    info.ino <= 0n ||
     (await realpath(workspace)) !== workspace
-  ) return null;
+  )
+    return null;
   return {
-    path: workspace, dev: info.dev, ino: info.ino,
-    birthtimeNs: typeof info.birthtimeNs === 'bigint' && info.birthtimeNs > 0n ? info.birthtimeNs : null,
+    path: workspace,
+    dev: info.dev,
+    ino: info.ino,
+    birthtimeNs:
+      typeof info.birthtimeNs === 'bigint' && info.birthtimeNs > 0n ? info.birthtimeNs : null,
   };
 }
 // Internal post-Git reconciliation, not independent cleanup authority: the
@@ -33,7 +41,10 @@ export async function captureWorkspaceIdentity(workspace) {
 export async function finishWorkspaceRemoval(run, identity, gitError = null) {
   try {
     const owner = await ownedDirectory(run.directory, run.id);
-    if (owner.repository !== run.repository.root || run.workspace !== join(run.directory, 'worktree'))
+    if (
+      owner.repository !== run.repository.root ||
+      run.workspace !== join(run.directory, 'worktree')
+    )
       throw new Error('Invalid workspace ownership');
     if (await isWorkspaceRegistered(run)) {
       if (gitError) throw gitError;
@@ -43,10 +54,14 @@ export async function finishWorkspaceRemoval(run, identity, gitError = null) {
     if (await optionalInfo(run.workspace)) {
       const current = await captureWorkspaceIdentity(run.workspace);
       if (
-        !identity || !current || identity.path !== current.path ||
-        identity.dev !== current.dev || identity.ino !== current.ino ||
+        !identity ||
+        !current ||
+        identity.path !== current.path ||
+        identity.dev !== current.dev ||
+        identity.ino !== current.ino ||
         identity.birthtimeNs !== current.birthtimeNs
-      ) throw new Error('Unexpected workspace residue identity');
+      )
+        throw new Error('Unexpected workspace residue identity');
       // fs.rm unlinks nested symlinks/junctions, never their targets.
       await rm(run.workspace, { recursive: true, force: true, maxRetries: 3 });
       residueRemoved = true;
@@ -55,8 +70,7 @@ export async function finishWorkspaceRemoval(run, identity, gitError = null) {
       throw new Error('Workspace cleanup postcondition failed');
     return { residueRemoved };
   } catch (error) {
-    if (gitError && error !== gitError)
-      throw new AggregateError([gitError, error], error.message);
+    if (gitError && error !== gitError) throw new AggregateError([gitError, error], error.message);
     throw error;
   }
 }
