@@ -205,6 +205,8 @@ Use **unused directories**; do not overwrite an existing checkout or installatio
 
 Despite the `--host codex` flag, the generated `skills/evolution-stress-test/` is a portable, self-contained skill with an embedded runner. Copy **that entire generated folder**, including `scripts/runner/`, references, and metadata. Copying only `SKILL.md` or the source repository's skill folder breaks the standalone installation.
 
+Generated bundles include the MIT `LICENSE` at the bundle and skill roots; the standalone embedded runner also carries its own copy. Retain these notices when copying or redistributing the complete generated skill.
+
 ## Codex: local standalone skill preview
 
 1. [Build the standalone bundle](#build-a-standalone-bundle).

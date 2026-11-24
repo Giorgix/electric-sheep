@@ -1,6 +1,6 @@
 {
   "name": "electric-sheep",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Local evolution stress tests for maintainable AI-generated software",
   "author": {"name": "Electric Sheep contributors"},
   "repository": "https://github.com/Giorgix/electric-sheep",

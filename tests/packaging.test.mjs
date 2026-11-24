@@ -1,6 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, readFile, access, writeFile, cp, realpath, rename, lstat, readdir, symlink } from 'node:fs/promises';
+import {
+  mkdtemp,
+  rm,
+  readFile,
+  access,
+  writeFile,
+  cp,
+  realpath,
+  rename,
+  lstat,
+  readdir,
+  symlink,
+} from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
@@ -30,7 +42,8 @@ async function sourceWithoutLicense(t) {
   const fixture = join(root, 'source');
   await cp(source, fixture, {
     recursive: true,
-    filter: (path) => path !== join(source, 'LICENSE') &&
+    filter: (path) =>
+      path !== join(source, 'LICENSE') &&
       !['.git', '.worktrees', '.superpowers', 'node_modules'].includes(basename(path)),
   });
   const { packageLocal: packageFixture } = await import(
@@ -40,7 +53,10 @@ async function sourceWithoutLicense(t) {
 }
 async function assertUnpublished(root, out) {
   await assert.rejects(access(out), { code: 'ENOENT' });
-  assert.deepEqual((await readdir(root)).filter((name) => name.startsWith('.electric-sheep-package-')), []);
+  assert.deepEqual(
+    (await readdir(root)).filter((name) => name.startsWith('.electric-sheep-package-')),
+    [],
+  );
 }
 for (const host of ['claude', 'codex'])
   test(`${host} bundle contains shared skill and independently usable runner`, async (t) => {
@@ -82,7 +98,9 @@ test('standalone Codex skill keeps its runner after copying only the complete ge
   const notice = await readFile(join(source, 'LICENSE'));
   await assertNotice(join(installed, 'LICENSE'), notice);
   await assertNotice(join(installed, 'scripts/runner/LICENSE'), notice);
-  const embedded = JSON.parse(await readFile(join(installed, 'scripts/runner/package.json'), 'utf8'));
+  const embedded = JSON.parse(
+    await readFile(join(installed, 'scripts/runner/package.json'), 'utf8'),
+  );
   assert.equal(embedded.license, 'MIT');
   const result = await promisify(execFile)(
     process.execPath,

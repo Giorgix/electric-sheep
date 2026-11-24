@@ -2,6 +2,15 @@
 
 This is a local preview, not a claim of universal reliability or production readiness.
 
+## Electric Sheep 0.4.2 license-preserving bundles (2026-11-24)
+
+- Reused the existing plain-file copy and staged packaging pipeline to retain the unchanged root MIT notice at both host bundle roots, both generated skill roots and the Codex embedded-runner root. Root `LICENSE`, canonical skill, runner APIs, schema 1 and storage/cleanup behavior remain unchanged.
+- Baseline: **209 cases, 208 passed, 0 failed, 1 skipped** on Windows / Node 22. Before the packager change, three absent-notice assertions and a missing-source-license rejection assertion failed as intended. The isolated source fixture imported and executed real packaging code; these were not setup/import failures. Two subsequent distribution assertions reproduced **0.4.1 versus 0.4.2** before release metadata alignment.
+- Packaging tests compare actual regular-file bytes in both host bundles and in an independently copied skill/embedded runner after removing the original bundle. Existing copied CLI, selected report, export, cleanup and moved-evidence verification still execute. A missing source notice now prevents output publication and leaves no staging residue. The symlinked-license refusal/target-preservation case is present but **skipped locally because Windows denied file-symlink creation (`EPERM`)**; its refusal behavior is not claimed executed here.
+- Local green suite: **211 cases, 209 passed, 0 failed, 2 explicitly skipped**. The other skip is the existing non-root-POSIX permission-fallback test. Packaging selection: **6 passed, 1 skipped**; combined distribution/packaging: **10 passed, 1 skipped**; distribution: **4/4 passed**. No skip or green reevaluation erases the recorded REDs.
+- Syntax, full-project formatting and whitespace checks passed. Offline, script-disabled npm dry-run lists **38 files**, including root `LICENSE`. All package/lock/plugin/catalog identities are **0.4.2**; root SPDX remains MIT, production dependencies remain zero and locked Prettier **3.6.2** resolution/integrity are preserved. One locked development installation ran with lifecycle scripts disabled.
+- Review is author self-review, not independent assurance. Current-release CI, live-client upgrade/discovery, active running-client resources and model instruction-following require separate observed evidence and are not claimed here. No installed-cache patch, actual client update, model session, historical experiment rerun or retained-resource cleanup occurred in this local implementation.
+
 ## Environment inspected
 
 - Windows / Git Bash; Node v22.23.4; Git 2.56.0.windows.3.
