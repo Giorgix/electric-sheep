@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, readFile, access, writeFile, cp, realpath, rename } from 'node:fs/promises';
+import { mkdtemp, rm, readFile, access, writeFile, cp, realpath, rename, lstat, readdir, symlink } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { packageLocal } from '../scripts/package-local.mjs';
@@ -16,6 +16,31 @@ async function temp(t) {
   const root = await mkdtemp(join(tmpdir(), 'electric-sheep bundles ü '));
   t.after(() => rm(root, { recursive: true, force: true }));
   return root;
+}
+async function assertNotice(file, expectedBytes) {
+  const info = await lstat(file).catch((error) => {
+    if (error.code !== 'ENOENT') throw error;
+    return null;
+  });
+  assert.ok(info?.isFile(), `Missing regular license: ${file}`);
+  assert.deepEqual(await readFile(file), expectedBytes);
+}
+async function sourceWithoutLicense(t) {
+  const root = await temp(t);
+  const fixture = join(root, 'source');
+  await cp(source, fixture, {
+    recursive: true,
+    filter: (path) => path !== join(source, 'LICENSE') &&
+      !['.git', '.worktrees', '.superpowers', 'node_modules'].includes(basename(path)),
+  });
+  const { packageLocal: packageFixture } = await import(
+    pathToFileURL(join(fixture, 'scripts/package-local.mjs')).href
+  );
+  return { root, fixture, packageFixture };
+}
+async function assertUnpublished(root, out) {
+  await assert.rejects(access(out), { code: 'ENOENT' });
+  assert.deepEqual((await readdir(root)).filter((name) => name.startsWith('.electric-sheep-package-')), []);
 }
 for (const host of ['claude', 'codex'])
   test(`${host} bundle contains shared skill and independently usable runner`, async (t) => {
@@ -31,6 +56,9 @@ for (const host of ['claude', 'codex'])
     const pkg = JSON.parse(await readFile(join(out, 'package.json'), 'utf8'));
     assert.equal(manifest.name, 'electric-sheep');
     assert.equal(manifest.version, pkg.version);
+    const notice = await readFile(join(source, 'LICENSE'));
+    await assertNotice(join(out, 'LICENSE'), notice);
+    await assertNotice(join(out, 'skills/evolution-stress-test/LICENSE'), notice);
     assert.equal(
       await readFile(join(out, 'skills/evolution-stress-test/SKILL.md'), 'utf8'),
       await readFile(join(source, 'skills/evolution-stress-test/SKILL.md'), 'utf8'),
@@ -51,6 +79,11 @@ test('standalone Codex skill keeps its runner after copying only the complete ge
   const installed = join(root, 'user-skills/evolution-stress-test');
   await cp(join(out, 'skills/evolution-stress-test'), installed, { recursive: true });
   await rm(out, { recursive: true });
+  const notice = await readFile(join(source, 'LICENSE'));
+  await assertNotice(join(installed, 'LICENSE'), notice);
+  await assertNotice(join(installed, 'scripts/runner/LICENSE'), notice);
+  const embedded = JSON.parse(await readFile(join(installed, 'scripts/runner/package.json'), 'utf8'));
+  assert.equal(embedded.license, 'MIT');
   const result = await promisify(execFile)(
     process.execPath,
     [join(installed, 'scripts/run.mjs'), '--help'],
@@ -163,6 +196,28 @@ test('Claude bundle carries a self-contained catalog whose root skill runner wor
     { cwd: root },
   );
   assert.match(stdout, /Electric Sheep/);
+});
+test('missing source license refuses publication and removes staging residue', async (t) => {
+  const { root, packageFixture } = await sourceWithoutLicense(t);
+  const out = join(root, 'bundle');
+  await assert.rejects(packageFixture({ host: 'codex', out }), /LICENSE/);
+  await assertUnpublished(root, out);
+});
+test('symlinked source license refuses publication without changing its target', async (t) => {
+  const { root, fixture, packageFixture } = await sourceWithoutLicense(t);
+  const target = join(root, 'protected-notice');
+  await writeFile(target, 'synthetic protected file\n');
+  try {
+    await symlink(target, join(fixture, 'LICENSE'), 'file');
+  } catch (error) {
+    if (!['EPERM', 'EACCES', 'ENOSYS', 'ENOTSUP'].includes(error.code)) throw error;
+    t.skip(`File symlinks unavailable: ${error.code}`);
+    return;
+  }
+  const out = join(root, 'bundle');
+  await assert.rejects(packageFixture({ host: 'claude', out }), /Cannot package symlink/);
+  assert.equal(await readFile(target, 'utf8'), 'synthetic protected file\n');
+  await assertUnpublished(root, out);
 });
 test('unsafe output locations and unknown hosts are rejected without overwrite', async (t) => {
   await assert.rejects(

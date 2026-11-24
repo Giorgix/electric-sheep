@@ -48,6 +48,7 @@ export async function packageLocal({ host, out }) {
   try {
     const paths = [
       'package.json',
+      'LICENSE',
       'bin',
       'src',
       'skills',
@@ -59,9 +60,10 @@ export async function packageLocal({ host, out }) {
     ];
     if (host === 'claude') paths.push('.claude-plugin/marketplace.json');
     for (const path of paths) await copyPlain(join(source, path), join(stage, path));
+    await copyPlain(join(source, 'LICENSE'), join(stage, 'skills/evolution-stress-test/LICENSE'));
     if (host === 'codex') {
       const embedded = join(stage, 'skills/evolution-stress-test/scripts/runner');
-      for (const path of ['src', 'bin', 'package.json'])
+      for (const path of ['src', 'bin', 'package.json', 'LICENSE'])
         await copyPlain(join(source, path), join(embedded, path));
     }
     if (existing) await rm(output, { recursive: true });
