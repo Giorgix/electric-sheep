@@ -10,6 +10,10 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-26-skill-writing-for-agents-design.md`.
 
+## Approved version/publication amendment (2026-11-26)
+
+After the completed initial refactor at `e1309b2`, the user approved pushing this feature branch/opening a PR against `main`, then requested a version bump before publication. The effective release target is **0.4.3**, superseding the initial no-version-bump and no-push/PR constraints below; merge, tags, npm publication, client updates, Amanda and cleanup remain unauthorized. Align the six version locations in the five existing metadata files; update `tests/distribution.test.mjs` first (two expected 0.4.2-versus-0.4.3 failures), apply the minimal bump, then run focused/full compatibility, syntax, formatting and whitespace checks. Add the current-release verification entry and use the existing npm CLI for offline/script-disabled `pack --dry-run --json` inspection. Retain all pre-bump evidence; new receipts live under the existing evidence directory's `publication-0.4.3/` subdirectory. Runtime, schema, MIT and dependency data remain unchanged. The initial execution record below describes the pre-bump candidate, not a current-version claim.
+
 ## Global Constraints
 
 - Keep package/version 0.4.2, schema 1, Node 22+, Git, canonical names, exact MIT notices and zero production dependencies. Preserve pinned development Prettier 3.6.2 and its lockfile resolution/integrity.

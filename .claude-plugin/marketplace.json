@@ -10,7 +10,7 @@
     {
       "name": "electric-sheep",
       "description": "Evidence-driven evolution stress tests in isolated Git worktrees",
-      "version": "0.4.2",
+      "version": "0.4.3",
       "source": "./",
       "strict": true
     }

@@ -2,6 +2,14 @@
 
 This is a local preview, not a claim of universal reliability or production readiness.
 
+## Electric Sheep 0.4.3 skill clarity (2026-11-26)
+
+- Applied `writing-for-agents` to the explicit-use skill: human-facing description, five ordered stages, observable completion gates and stage-specific reference pointers. The main file is **642 -> 486 words** by the original Git Bash `wc -w` method. Main plus Markdown references is **2378 -> 2455** because challenge guidance now includes an explicit coverage matrix; this is not a token-cost or reliability measurement.
+- Before each freeze, the host maps promised behavior/branches to expected results, real named checks and approved command IDs. Ready and blocked effect checks are separate rows. The matrix stays outside source and schema-1 JSON; it does not automatically certify test adequacy. Later coverage omissions remain visible without resetting frozen history or spent attempts.
+- Generated Claude/Codex bundles and an independently copied standalone Codex skill retain all five reference assets byte-for-byte. Existing runner, license, report, export and cleanup assertions remain. Targeted local checks: **15 cases, 14 passed, zero failed, one file-symlink EPERM skip**.
+- The user requested the patch bump after the initial documentation refactor. Two distribution assertions first failed on **0.4.2 versus 0.4.3**, then all **4 distribution checks passed** after aligning package, both root lockfile versions, Claude/Codex plugins and marketplace to **0.4.3**. All other metadata, runtime APIs, schema 1, MIT bytes, production dependency count and locked Prettier 3.6.2 data remain unchanged.
+- This is the explicitly approved documentation preview: fresh-agent pressure/no-guidance-control scenarios remain **Not run**, and review is author self-review only. File/runner checks are not evidence of better agent behavior. No new model calls, installed-client updates, live-client activation, historical experiment reruns or retained-resource cleanup are part of the release.
+
 ## Electric Sheep 0.4.2 license-preserving bundles (2026-11-24)
 
 - Reused the existing plain-file copy and staged packaging pipeline to retain the unchanged root MIT notice at both host bundle roots, both generated skill roots and the Codex embedded-runner root. Root `LICENSE`, canonical skill, runner APIs, schema 1 and storage/cleanup behavior remain unchanged.

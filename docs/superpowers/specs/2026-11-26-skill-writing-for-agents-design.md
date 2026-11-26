@@ -1,5 +1,9 @@
 # Electric Sheep skill clarity design
 
+## Approved version amendment (2026-11-26)
+
+After the initial refactor at `e1309b2`, the user approved feature-branch publication/PR creation and requested a version bump before either occurred. Release this documentation patch as **0.4.3**. This supersedes the initial 0.4.2/no-version-bump clauses below: align package, both root lockfile versions, Claude/Codex plugin and marketplace versions; update distribution expectations test-first and add a verification entry. All other constraints remain: no runtime/schema/dependency/license changes, client update, merge, Amanda execution or cleanup. Historical pre-bump records remain unchanged.
+
 ## Intent and approval
 
 Apply `writing-for-agents` to the existing `evolution-stress-test` skill: reduce unnecessary reading and make its workflow more predictable without changing the runner. The user approved this documentation-only design in conversation on 2026-11-26. Implementation, dependency setup, publication, client updates and cleanup are separate gates.
