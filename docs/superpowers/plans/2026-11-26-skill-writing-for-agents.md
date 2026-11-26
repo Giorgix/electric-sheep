@@ -74,12 +74,12 @@ Read-only Git inspection, word counts, hashing/reading owned artifacts and local
 
 **Interfaces:** Consume actual source metadata, `packageLocal({ host, out })`, and existing generated-bundle fixtures. Produce compatibility checks that remain valid for a user-invoked description and additional real reference-copy assertions; produce behavioral scenarios, not fabricated agent outputs.
 
-- [ ] **1. Confirm execution approval**, including explicit permission for the documentation-preview/fresh-agent-testing exception. Record whether offline formatter installation was separately approved. Recheck W, original checkout, protected-file hashes and registered worktrees before any test or setup.
-- [ ] **2. Run `baseline` before changes.** Require zero failing tests and record actual passes/skips; the prior release's counts are historical, not this baseline. Stop and diagnose an unexpected failure before proceeding.
-- [ ] **3. Add before-edit behavioral scenarios.** Give each scenario the concrete input, pressure and observable expected action: missing ready-path effect test before freeze; gap discovered after freeze; early terminal state requiring handoff; stage-specific reference retrieval from another cwd; explicit-use skill with pressure to use an unapproved model. Keep baseline/with-skill cells `Not run` and distinguish historical Document X-Ray evidence from a fresh controlled test. Keep existing scenarios and their status.
-- [ ] **4. Update metadata compatibility assertions.** Replace only the brittle `description: Use when` prefix expectation with a nonempty single-line description check; preserve the existing name assertion and add the explicit-use flag check. Keep example validation and outside-cwd runner tests. Do not lock prose wording or word counts into tests.
-- [ ] **5. Extend actual artifact tests.** In both host bundles compare the five existing reference files (`challenges.md`, `assessment.md`, `follow-up.md`, `plan.example.json`, `follow-up.example.json`) byte-for-byte with source. In the standalone-copy test, verify those files remain after the parent bundle is deleted, alongside existing runner/license/report/export/cleanup assertions. This catches missing/stale distributed assets, not whether agents obey their content.
-- [ ] **6. Run `targeted`.** Compatibility should pass against the old skill too: these preserve existing artifact behavior. There is no expected behavioral RED and no manufactured failing prose test. An actual failure is investigated before skill edits.
+- [x] **1. Confirm execution approval**, including explicit permission for the documentation-preview/fresh-agent-testing exception. Record whether offline formatter installation was separately approved. Recheck W, original checkout, protected-file hashes and registered worktrees before any test or setup.
+- [x] **2. Run `baseline` before changes.** Require zero failing tests and record actual passes/skips; the prior release's counts are historical, not this baseline. Stop and diagnose an unexpected failure before proceeding.
+- [x] **3. Add before-edit behavioral scenarios.** Give each scenario the concrete input, pressure and observable expected action: missing ready-path effect test before freeze; gap discovered after freeze; early terminal state requiring handoff; stage-specific reference retrieval from another cwd; explicit-use skill with pressure to use an unapproved model. Keep baseline/with-skill cells `Not run` and distinguish historical Document X-Ray evidence from a fresh controlled test. Keep existing scenarios and their status.
+- [x] **4. Update metadata compatibility assertions.** Replace only the brittle `description: Use when` prefix expectation with a nonempty single-line description check; preserve the existing name assertion and add the explicit-use flag check. Keep example validation and outside-cwd runner tests. Do not lock prose wording or word counts into tests.
+- [x] **5. Extend actual artifact tests.** In both host bundles compare the five existing reference files (`challenges.md`, `assessment.md`, `follow-up.md`, `plan.example.json`, `follow-up.example.json`) byte-for-byte with source. In the standalone-copy test, verify those files remain after the parent bundle is deleted, alongside existing runner/license/report/export/cleanup assertions. This catches missing/stale distributed assets, not whether agents obey their content.
+- [x] **6. Run `targeted`.** Compatibility should pass against the old skill too: these preserve existing artifact behavior. There is no expected behavioral RED and no manufactured failing prose test. An actual failure is investigated before skill edits.
 
 ## Task 2: Refactor the skill and verify the complete change
 
@@ -103,6 +103,6 @@ Read-only Git inspection, word counts, hashing/reading owned artifacts and local
 - [x] Artifact checks are not substituted for behavioral RED/GREEN; explicit preview exception required before skill edits.
 - [x] Concrete executable/argv/cwd/timeouts, offline-only optional setup and protected paths specified.
 - [x] Work sized as one cohesive documentation refactor; no new router, helper framework or model-evaluation infrastructure.
-- [ ] User reviewed/approved this implementation plan and inline execution.
-- [ ] User explicitly approved deferring fresh-agent pressure tests for this documentation preview.
-- [ ] User separately approved the optional once-only offline formatter installation.
+- [x] User reviewed/approved this implementation plan and inline execution.
+- [x] User explicitly approved deferring fresh-agent pressure tests for this documentation preview.
+- [x] User separately approved the optional once-only offline formatter installation.
