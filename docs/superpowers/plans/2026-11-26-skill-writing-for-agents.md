@@ -93,8 +93,8 @@ Read-only Git inspection, word counts, hashing/reading owned artifacts and local
 - [x] **4. Measure and review the changed documents.** Record before/after main-file and total reference word counts, plus which files each stage requires. Aim for about 500 main-file words, not a brittle threshold. Check every Markdown pointer including any fragment against actual source and generated artifacts. Review every original instruction against its new authoritative location; account explicitly for safety-critical instructions. Preserve justified negations for hard guardrails rather than shortening them away.
 - [x] **5. If separately approved, run `formatter-setup` once**, followed by `format-changed`. A cache miss is a reported blocker, not permission to fetch. Otherwise use targeted Edit changes and leave full formatting validation pending.
 - [x] **6. Run `targeted`, `syntax`, `format-check` if available, `full`, `whitespace` and `preservation`.** Require no failing tests/diagnostics; name any skips or unavailable checks. Verify the original checkout and other registrations again. Keep receipts outside Git.
-- [ ] **7. Perform author self-review of the entire branch diff.** Check each spec requirement and five Review Focus cases. Update plan/scenario checkboxes with actual evidence only. Record that no fresh-agent pressure tests or independent review occurred and that behavior remains unverified.
-- [ ] **8. Commit only allowlisted changes on the feature branch**, with a message such as `docs: clarify Electric Sheep skill stages and coverage gates`. Report changed paths, measured size changes, actual test results/limits, retained worktree and the next authorization needed. Do not push, create a PR, update clients or start Amanda.
+- [x] **7. Perform author self-review of the entire branch diff.** Check each spec requirement and five Review Focus cases. Update plan/scenario checkboxes with actual evidence only. Record that no fresh-agent pressure tests or independent review occurred and that behavior remains unverified.
+- [x] **8. Commit only allowlisted changes on the feature branch**, with a message such as `docs: clarify Electric Sheep skill stages and coverage gates`. Report changed paths, measured size changes, actual test results/limits, retained worktree and the next authorization needed. Do not push, create a PR, update clients or start Amanda.
 
 ## Plan self-review and approval status
 
@@ -106,3 +106,15 @@ Read-only Git inspection, word counts, hashing/reading owned artifacts and local
 - [x] User reviewed/approved this implementation plan and inline execution.
 - [x] User explicitly approved deferring fresh-agent pressure tests for this documentation preview.
 - [x] User separately approved the optional once-only offline formatter installation.
+
+## Execution result
+
+Completed inline as the explicitly approved documentation preview. Task 1 commit: `94a6b02`; skill implementation: `25fbb64`. Whole-branch author self-review found no Critical/Important issues or deferred minors; it was not independent review.
+
+Baseline and both full-suite checks each recorded 211 cases, 209 passed, zero failed, two platform skips (Unix permissions on Windows and file-symlink EPERM). Targeted checks recorded 15 cases, 14 passed, zero failed, one symlink skip. Syntax, configured formatting, Markdown targets/fragment, whitespace and protected-content checks passed. Offline setup ran once and installed only pinned Prettier 3.6.2; formatting changed no bytes.
+
+Original Git Bash `wc -w` method: main file 642 -> 486 words; main plus Markdown references 2378 -> 2455. New reference detail buys explicit coverage review; these are not model-token, cost or reliability measurements. The independent JavaScript count includes 11 old standalone Unicode symbols ignored by this wc locale; both records are retained.
+
+Behavioral scenarios remain Not run, and independent validation remains unverified. Runner/CLI/schema/examples/version/dependencies/license and installed clients are unchanged. Main and other registered worktrees are preserved; this branch, its dependencies and owned scratch/evidence remain retained, not published or cleaned up.
+
+Receipts: `D:/CODING/electric-sheep-investigations/2026-11-26-skill-writing-for-agents/`, including command logs, `measurements.json`, `wc-measurements.json`, `whole-branch-review.diff` and `self-review.md`. Final source/status/hash verification is recorded there after the closing documentation commit.
