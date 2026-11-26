@@ -11,7 +11,7 @@ Start with the actual requirement, inputs, outputs, existing behavior, and expec
 
 Prefer one boundary/failure pressure and one extension pressure across the three cumulative rounds. Choose ordering that reveals coupling: requirement 2 builds on requirement 1; requirement 3 must preserve both. Requirements can be known in advance; this is not a hidden benchmark.
 
-For a small checkout, the example plan introduces multiple items with an empty-cart rule, then explicit nonnegative monetary rounding, then duplicate-order idempotency. Tests should use an in-memory fake at the external boundary if necessary, not a live payment provider. A parser or local CLI needs different challenges.
+Use in-memory fakes at external boundaries where needed, not live providers. Adapt challenges to this project's domain; the checkout example is not a universal test suite.
 
 Before requesting approval check:
 - Is the requirement justified by this project's domain and scale?
@@ -20,4 +20,17 @@ Before requesting approval check:
 - Does the acceptance check distinguish missing behavior, and do regressions remain meaningful?
 - Could an intentionally simple solution satisfy it without layers of speculative architecture?
 
-Use explicit test files per round. Select baseline test files, configuration, and fixtures that prevent silent weakening, and declare generated-path exclusions as literal relative paths/prefixes (not glob patterns). Hashes are audit evidence, not tamper-proof security. If the project has no baseline tests, propose an approved minimal behavioral check and label coverage limited.
+Use explicit test files per round. Protect baseline tests, configuration and fixtures against silent weakening. Declare generated-path exclusions as literal relative paths/prefixes, not globs. Hashes are audit evidence, not tamper-proof security. Without baseline tests, propose an approved minimal behavioral check and label coverage limited.
+
+## Pre-freeze coverage
+
+Before each `freeze`, save a coverage matrix alongside the approved plan, outside source. This is host-authored review material, not a new schema-1 plan field. Each promised behavior and distinct branch needs a row with four slots:
+
+| Requirement/branch | Expected result | Test file + test/check name | Approved command ID |
+|---|---|---|---|
+| Pure preview / ready | Correct ready result; no store, queue, adapter or file effects | `round1.test.mjs` / `ready preview has no effects` | `preview` |
+| Pure preview / blocked | Controlled refusal; the same effect boundaries remain untouched | `round1.test.mjs` / `blocked preview has no effects` | `preview` |
+
+These names are illustrative; replace them with actual checks and approved command IDs. Inspect the tests: output assertions alone do not establish effect coverage. For each row, confirm the check exists, asserts the promised result/effects and is reached by that command. Resolve missing coverage before freezing; a scope revision needs user approval first. Test counts and hashes do not certify adequacy.
+
+A pre-implementation failure caused by an asserted missing capability can be expected. Setup, import, dependency or plugin failures are not meaningful behavioral REDs; diagnose the blocker rather than implementing against a broken oracle. Later-discovered omissions belong in the assessment as coverage limits; they do not authorize silent frozen-test changes or extra attempts.

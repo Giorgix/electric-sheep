@@ -15,7 +15,8 @@ test('skill metadata and reference assets are consumable', async () => {
   const front = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   assert.ok(front);
   assert.match(front[1], /^name: [a-z0-9-]+$/m);
-  assert.match(front[1], /^description: Use when/m);
+  assert.match(front[1], /^description: \S[^\r\n]*$/m);
+  assert.match(front[1], /^disable-model-invocation: true$/m);
   for (const ref of ['challenges.md', 'assessment.md', 'plan.example.json'])
     await access(join(skill, 'references', ref));
 });

@@ -24,6 +24,21 @@ import { protocolFixture } from './helpers/protocol.mjs';
 import { addFinding } from '../src/report.mjs';
 import { findingInput } from './helpers/follow-up.mjs';
 const source = join(import.meta.dirname, '..');
+async function assertReferenceAssets(skillDirectory) {
+  for (const file of [
+    'challenges.md',
+    'assessment.md',
+    'follow-up.md',
+    'plan.example.json',
+    'follow-up.example.json',
+  ]) {
+    assert.deepEqual(
+      await readFile(join(skillDirectory, 'references', file)),
+      await readFile(join(source, 'skills/evolution-stress-test/references', file)),
+      `Reference asset differs: ${file}`,
+    );
+  }
+}
 async function temp(t) {
   const root = await mkdtemp(join(tmpdir(), 'electric-sheep bundles ü '));
   t.after(() => rm(root, { recursive: true, force: true }));
@@ -75,6 +90,7 @@ for (const host of ['claude', 'codex'])
     const notice = await readFile(join(source, 'LICENSE'));
     await assertNotice(join(out, 'LICENSE'), notice);
     await assertNotice(join(out, 'skills/evolution-stress-test/LICENSE'), notice);
+    await assertReferenceAssets(join(out, 'skills/evolution-stress-test'));
     assert.equal(
       await readFile(join(out, 'skills/evolution-stress-test/SKILL.md'), 'utf8'),
       await readFile(join(source, 'skills/evolution-stress-test/SKILL.md'), 'utf8'),
@@ -95,6 +111,7 @@ test('standalone Codex skill keeps its runner after copying only the complete ge
   const installed = join(root, 'user-skills/evolution-stress-test');
   await cp(join(out, 'skills/evolution-stress-test'), installed, { recursive: true });
   await rm(out, { recursive: true });
+  await assertReferenceAssets(installed);
   const notice = await readFile(join(source, 'LICENSE'));
   await assertNotice(join(installed, 'LICENSE'), notice);
   await assertNotice(join(installed, 'scripts/runner/LICENSE'), notice);
