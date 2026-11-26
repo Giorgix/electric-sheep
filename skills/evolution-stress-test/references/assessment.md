@@ -23,4 +23,6 @@ Large files, diff size, and dependency growth are signals. Generated code is exc
 
 No universal numerical quality score or ship/no-ship verdict. Passing three challenges proves only those observed checks in that environment. Distinguish a separate-agent assessment from a single model judging its own changes; do not claim independent review without it.
 
-The runner generates six report sections: scope/baseline/limits; per-challenge evidence; regression results and structural deltas; attributed findings; next actions; resume/cleanup. Include missing tests, incomplete rounds, safety constraints, and unverified hypotheses. Logs stay local but may contain sensitive data; the coding host's existing provider/privacy settings still apply.
+Reconcile the coverage matrix with actual tests and results: name untested branches even if every written check passed. A gap discovered after freezing remains a coverage limit, not retroactive certification or permission to reset attempts. Any amendment requires explicit approval and preserves history and spent attempts.
+
+Include scope/baseline limits, per-challenge evidence, regression/structural changes, attributed findings, next actions and resume/cleanup status. State missing tests, incomplete rounds, safety constraints and unverified hypotheses. Logs stay local but may contain sensitive data; the coding host's existing provider/privacy settings still apply.
