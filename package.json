@@ -1,6 +1,6 @@
 {
   "name": "electric-sheep",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "license": "MIT",
   "description": "Evidence-driven evolution stress tests for coding agents",
   "type": "module",
